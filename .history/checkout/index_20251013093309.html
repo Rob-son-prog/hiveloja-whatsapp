@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Checkout</title>
+  <style>
+    :root{--bg:#0b0c10;--card:#16181d;--muted:#8b93a1;--txt:#e9edf1;--acc:#22c55e;--bd:#232730;}
+    *{box-sizing:border-box}
+    body{margin:0;font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--txt)}
+    .wrap{max-width:980px;margin:32px auto;padding:0 16px}
+    .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab{border:1px solid var(--bd);background:#0f1115;color:var(--txt);padding:8px 12px;border-radius:10px;cursor:pointer}
+    .tab.active{background:var(--acc);color:#092b14;font-weight:700;border-color:#15803d}
+    .grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+    .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px}
+    .img{width:100%;height:auto;aspect-ratio:16/9;border-radius:12px;object-fit:cover;border:1px solid var(--bd);background:#0f1115}
+    h1{font-size:22px;margin:0}
+    h2{font-size:16px;margin:0 0 10px}
+    .muted{color:var(--muted);font-size:12px}
+    .price{font-size:22px;font-weight:800}
+    .row{display:flex;justify-content:space-between;align-items:center;margin:8px 0}
+    .total{font-size:18px;font-weight:800}
+    .btn{appearance:none;border:0;border-radius:12px;padding:12px 16px;cursor:pointer;font-weight:700;width:100%}
+    .btn-buy{background:var(--acc);color:#062a12}
+    .badge{display:inline-flex;gap:6px;align-items:center;background:#0f1115;border:1px solid var(--bd);padding:6px 10px;border-radius:999px;color:#d1d7e0}
+    .list{margin:10px 0 0;padding:0 0 0 18px;color:#cfd5de}
+    .bump{display:flex;gap:10px;align-items:flex-start;border:1px dashed #2b313b;padding:10px;border-radius:10px;margin-bottom:10px;background:#0f1115}
+    .bump input{margin-top:2px}
+    .bump-img{width:56px;height:56px;border-radius:10px;object-fit:cover;border:1px solid var(--bd);background:#0f1115; flex-shrink: 0;}
+    .bump-body{display:flex;flex-direction:column;gap:2px}
+    .backdash {
+      position: fixed; top: 14px; right: 14px; z-index: 9999;
+      background: #22c55e; color: #062a12; font: 600 14px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      padding: 10px 14px; border-radius: 10px; text-decoration: none; box-shadow: 0 6px 18px rgba(0,0,0,.35);
+      border: 0; transition: transform .06s ease, filter .2s ease; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .backdash:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    .backdash:active { transform: translateY(0); }
+    .backdash svg { width: 16px; height: 16px; }    
+    .paygrid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:12px; margin-top: 12px;
+    }
+    .paycard{
+      position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+      padding:16px 12px; background:#0f1115; border:1.5px solid #2f3540; border-radius:12px;
+      cursor:pointer; transition:.18s border-color,.18s box-shadow,.18s background; min-height:92px;
+    }
+    .paycard:hover{ border-color:#3b4350; }
+    .paycard input{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+    .paycard .ico{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:34px; height:34px; border-radius:8px; background:#0b0e13;
+    }
+    .paycard .ico svg{ width:24px; height:24px; display:block }
+    .paycard .label{ font-weight:700; font-size:13px; color:#e9edf1 }
+    .paycard:has(input:checked){
+      border-color:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,.15) inset; background:#0b1110;
+    }
+    .paycard.card .ico{ background:rgba(96,165,250,.15) }
+    .paycard.boleto .ico{ background:rgba(234,179,8,.15) }
+    .paycard.pix .ico{ background:rgba(34,197,94,.15); }
+    .pix-icon{ width:24px; height:24px; display:block; }
+    .paytips{
+      margin-top:10px; border:1px dashed #2f3540; border-radius:10px; padding:10px 12px; background:#0c0f14;
+    }
+    .paytips .ok{ display:flex; gap:8px; align-items:center; color:#cfe7d7; font-size:13px }
+    .paytips .ok:before{
+      content:''; width:10px; height:10px; border-radius:999px; background:#22c55e;
+      box-shadow:0 0 0 3px rgba(34,197,94,.18);
+    }
+    .qr-wrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+    .qr{width:clamp(180px, 45vw, 360px)}
+    .qr img{width:100%;height:auto;display:block;border:1px solid #2b313b;border-radius:12px;background:#0b0c10}
+    .pix-side{min-width:220px;max-width:520px;flex:1}
+    pre.codebox{
+      max-width:100%;overflow:auto;white-space:pre-wrap;word-break:break-word;
+      background:#0b0c10;border:1px dashed #2f3540;padding:10px;border-radius:10px;
+      color:#e9edf1;font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;font-size:13px;line-height:1.35
+    }
+    .hidden{display:none}
+    .field{margin:8px 0; display:flex; flex-direction:column; gap:6px}
+    .field label{font-size:12px; color:#cfd5de}
+    .field input, .field select{
+      background:#0c0f14; border:1px solid #2f3540; color:#e9edf1; border-radius:10px; padding:10px 12px; outline:none;
+    }
+    .status{margin-top:8px; font-size:13px}
+    @media (max-width:880px){
+        .grid{grid-template-columns:1fr}
+        .wrap{margin: 16px auto;}
+    }
+    @media (max-width: 720px){
+        .paygrid{ grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px){
+        .paygrid{ grid-template-columns: 1fr; }
+    }
+    @media (max-width:520px){
+      .pix-side{min-width:100%}
+    }
+  </style>
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+  </head>
+<body>
+
+  <a href="/admin/dashboard.html" class="backdash" title="Voltar ao Dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M15 18l-6-6 6-6"/>
+    </svg>
+    Dashboard
+  </a>
+
+  <div class="wrap">
+    <div class="head">
+      <h1>Checkout</h1>
+      <span class="badge" id="supportBadge">Suporte</span>
+    </div>
+
+    <div class="tabs" id="tabs"></div>
+
+    <div class="grid">
+      <div class="card">
+        <img id="cover" class="img" alt="Capa do produto" />
+        <h2 id="title" style="margin-top:12px"></h2>
+        <div class="muted">Resumo da oferta</div>
+        <ul class="list" id="summaryList">
+          <li>Entrega imediata após pagamento</li>
+          <li>Acesso vitalício</li>
+          <li>Atualizações quando disponíveis</li>
+        </ul>
+        <div style="height:12px"></div>
+        <h2>Adicionais (Order Bumps)</h2>
+        <div id="bumps"></div>
+        </div>
+
+      <div class="card">
+        <div class="row">
+          <div class="muted">Preço base</div>
+          <div id="basePrice" class="price">R$ 0,00</div>
+        </div>
+        <div id="bumpLines"></div>
+        <div class="row" style="border-top:1px solid var(--bd);padding-top:10px;margin-top:12px">
+          <div class="total">Total</div>
+          <div id="total" class="total">R$ 0,00</div>
+        </div>
+        <div style="height:12px"></div>
+        <button class="btn btn-buy" id="buyBtn">Comprar</button>
+        <div class="muted" style="margin-top:8px">Pagamento seguro.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ---------- CONFIGURAÇÃO ESSENCIAL ----------
+  window.MP_PUBLIC_KEY = 'APP_USR-d773af7e-3337-4a03-8e51-9a303624a029'; // sua PUBLIC KEY (não o access token)
+
+  // ---------- Utilitários de imagem ----------
+  function resolveUrl(u){
+    try { return u ? new URL(u, location.origin).href : ''; }
+    catch { return ''; }
+  }
+  function setImgWithFallback(img, primaryUrl, fallbackUrl, hardPlaceholder){
+    const target = resolveUrl(primaryUrl) || fallbackUrl || hardPlaceholder || '';
+    const current = img.getAttribute('src') || '';
+    if (current === target) return;
+    img.src = target;
+    const handler = () => {
+      img.removeEventListener('error', handler);
+      if (target !== fallbackUrl && fallbackUrl) {
+        img.src = fallbackUrl;
+        img.onerror = () => { img.onerror = null; img.src = hardPlaceholder || fallbackUrl; };
+      } else {
+        img.src = hardPlaceholder || fallbackUrl;
+      }
+    };
+    img.addEventListener('error', handler, { once: true });
+  }
+
+  // ---------- Helpers ----------
+  const parseBRL = (s='')=>{
+    s = (s+'').replace(/\s/g,'').replace(/[R$\s]/gi,'').replace(/\./g,'').replace(',', '.');
+    const n = Number(s); return isFinite(n) ? n : 0;
+  };
+  const fmtBRL = (n)=> n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  const makeOrderId = ()=> 'ORD-' + Date.now().toString(36).toUpperCase().slice(-6);
+  const el= (id)=>document.getElementById(id);
+
+  // ---------- Estado ----------
+  let CONFIG=null, cur='A', CURRENT_ORDER_ID=null;
+
+  async function loadConfig(){
+    const q = new URLSearchParams(location.search);
+    const p = (q.get('product') || 'A').toUpperCase();
+    cur = (p === 'B') ? 'B' : 'A';
+
+    const r = await fetch('/config',{cache:'no-store'});
+    CONFIG = await r.json();
+
+    const tabs = el('tabs');
+    const aLabel = CONFIG?.produtoA?.rotulo || 'Produto A';
+    const bLabel = CONFIG?.produtoB?.rotulo || 'Produto B';
+    tabs.innerHTML = `
+      <button class="tab" data-k="A">${aLabel}</button>
+      <button class="tab" data-k="B">${bLabel}</button>
+    `;
+    [...tabs.children].forEach(x => x.classList.toggle('active', x.dataset.k === cur));
+    tabs.onclick = (ev)=>{
+      const b = ev.target.closest('.tab'); if(!b) return;
+      cur = b.dataset.k;
+      [...tabs.children].forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      renderProduct();
+    };
+
+    el('supportBadge').textContent = (CONFIG.whatsapp_suporte || 'Suporte');
+    renderProduct();
+  }
+
+  function getProd(){ return cur==='A' ? (CONFIG?.produtoA || {}) : (CONFIG?.produtoB || {}) }
+
+  function renderProduct(){
+    const p = getProd();
+
+    const cover = el('cover');
+    cover.setAttribute('width','800'); cover.setAttribute('height','450'); // 16:9
+    setImgWithFallback(
+      cover,
+      (p.cover_url || '').trim(),
+      '/assets/placeholder-cover.jpg',
+      '/assets/placeholder-cover.jpg'
+    );
+
+    el('title').textContent = p.titulo || `Produto ${cur}`;
+    el('basePrice').textContent = p.preco || 'R$ 0,00';
+
+    const host = el('bumps'); host.innerHTML = '';
+    el('bumpLines').innerHTML = '';
+
+    const bumps = Array.isArray(p.bumps) ? p.bumps.slice(0,3) : [];
+    bumps.forEach(b=>{
+      const id = `bump_${b.id || Math.random().toString(36).slice(2)}`;
+      const row = document.createElement('label');
+      row.className = 'bump';
+      row.innerHTML = `
+        <input type="checkbox" id="${id}" data-id="${b.id || id}" data-preco="${b.preco||''}">
+        <img class="bump-img" alt="">
+        <div class="bump-body">
+          <div><strong>${b.titulo || 'Adicional'}</strong></div>
+          <div class="muted">${b.preco || ''}</div>
+        </div>
+      `;
+      host.appendChild(row);
+
+      const img = row.querySelector('.bump-img');
+      img.setAttribute('width','56'); img.setAttribute('height','56');
+      setImgWithFallback(
+        img,
+        (b.img_url || '').trim(),
+        '/assets/placeholder-bump.jpg',
+        '/assets/placeholder-bump.jpg'
+      );
+    });
+
+    calcTotal();
+    host.onchange = ()=>{ calcTotal(); updatePayPanelTotal(); };
+
+    const btn = el('buyBtn'); if (btn) btn.onclick = onBuy;
+
+    ensurePayPanel();
+  }
+
+  function computeTotal(){
+    const p = getProd(); let total = parseBRL(p.preco || '0');
+    const bumps = Array.from(el('bumps').querySelectorAll('input[type=checkbox]'));
+    bumps.forEach(chk=>{ if(chk.checked){ total += parseBRL(chk.dataset.preco||'0'); } });
+    return total;
+  }
+  function calcTotal(){ el('total').textContent = fmtBRL(computeTotal()); }
+
+  // ---------- Painel pagamento ----------
+  let mp = null, cardForm = null;
+
+  function ensurePayPanel(){
+    if (document.getElementById('payPanel')) return;
+
+    const panel = document.createElement('div');
+    panel.id = 'payPanel';
+    panel.style.marginTop = '16px';
+    panel.style.padding = '12px';
+    panel.style.border = '1px solid var(--bd, #232730)';
+    panel.style.borderRadius = '12px';
+    panel.style.background = '#0f1115';
+    panel.style.display = 'none';
+
+    panel.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <strong>Escolha como deseja pagar</strong>
+        <div class="muted">Total: <span id="payPanelTotal">–</span></div>
+      </div>
+
+      <div class="paygrid" role="radiogroup" aria-label="Forma de pagamento">
+        <label class="paycard pix">
+          <input type="radio" name="paymethod" value="pix" checked>
+          <span class="ico" aria-hidden="true">
+            <img class="pix-icon"
+                 src="https://img.icons8.com/?size=100&id=Dk4sj0EM4b20&format=png&color=000000"
+                 alt="Pix" onerror="this.src='/assets/pix.png'">
+          </span>
+          <span class="label">PIX</span>
+        </label>
+
+        <label class="paycard card">
+          <input type="radio" name="paymethod" value="card">
+          <span class="ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="5" width="20" height="14" rx="2" />
+              <line x1="2" y1="10" x2="22" y2="10" />
+            </svg>
+          </span>
+          <span class="label">Cartão</span>
+        </label>
+
+        <label class="paycard boleto">
+          <input type="radio" name="paymethod" value="boleto">
+          <span class="ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7M6 10v4m3-4v4m3-4v4m3-4v4" />
+            </svg>
+          </span>
+          <span class="label">Boleto</span>
+        </label>
+      </div>
+
+      <div class="paytips" id="payTips"></div>
+
+            <section id="card-block" class="hidden">
+        <h3 style="margin:10px 0">Pagamento com Cartão</h3>
+        <form id="card-form">
+          <div class="field" id="form-card-number"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="field" id="form-card-expiration-date"></div>
+            <div class="field" id="form-security-code"></div>
+          </div>
+          <div class="field" id="form-cardholder-name"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="field" id="form-issuer"></div>
+            <div class="field" id="form-installments"></div>
+          </div>
+          <div class="field">
+            <label for="form-doc-number">CPF do titular</label>
+            <input id="form-doc-number" type="text" inputmode="numeric" placeholder="000.000.000-00" required>
+          </div>
+          <div class="field">
+            <label for="form-payer-email">Email do comprador</label>
+            <input id="form-payer-email" type="email" placeholder="seu@email.com" required>
+          </div>
+        </form>
+        <div id="card-result" class="status"></div>
+      </section>
+
+            <section id="boleto-block" class="hidden">
+        <h3 style="margin:10px 0">Gerar Boleto</h3>
+        <form id="boleto-form">
+          <div class="field">
+            <label for="boleto-name">Nome completo</label>
+            <input id="boleto-name" type="text" required>
+          </div>
+          <div class="field">
+            <label for="boleto-cpf">CPF</label>
+            <input id="boleto-cpf" type="text" inputmode="numeric" required>
+          </div>
+          <div class="field">
+            <label for="boleto-email">Email</label>
+            <input id="boleto-email" type="email" required>
+          </div>
+        </form>
+        <div id="boleto-result" class="status"></div>
+      </section>
+
+      <div id="payResult" class="muted" style="margin:8px 0 12px 0;"></div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="btnPayNow" style="padding:10px 14px;border:0;border-radius:10px;background:#22c55e;color:#062a12;cursor:pointer;font-weight:600;">Finalizar Pagamento</button>
+        <button id="btnPayClose" style="padding:10px 14px;border:1px solid #333;border-radius:10px;background:#101217;color:#e9edf1;cursor:pointer;font-weight:600;">Cancelar</button>
+        <button id="btnGoMP" title="Abrir no Mercado Pago (fallback)" style="padding:10px 14px;border:1px solid #333;border-radius:10px;background:#101217;color:#e9edf1;cursor:pointer;font-weight:600;">Pagar no Mercado Pago</button>
+      </div>
+    `;
+
+    const anchor = document.getElementById('bumps');
+    anchor.parentElement.appendChild(panel);
+
+    // Botões
+    panel.querySelector('#btnPayNow').onclick = doProcessPayment;
+    panel.querySelector('#btnPayClose').onclick = () => togglePayPanel(false);
+    panel.querySelector('#btnGoMP').onclick = () => {
+      const url = buildRedirectUrl(CURRENT_ORDER_ID || makeOrderId());
+      window.location.href = url;
+    };
+
+    // Radio -> alterna blocos
+    panel.querySelectorAll('input[name="paymethod"]').forEach(r=>{
+      r.addEventListener('change', ()=>{
+        showBlock(r.value);
+        setTips(r.value);
+      });
+    });
+
+    // dicas iniciais
+    const tips = document.getElementById('payTips');
+    function setTips(m){
+      if (!tips) return;
+      if (m === 'pix'){
+        tips.innerHTML = `
+          <div class="ok">Liberação imediata</div>
+          <div class="ok">Pague usando o app do seu banco</div>`;
+      } else if (m === 'card'){
+        tips.innerHTML = `
+          <div class="ok">Aprovação rápida</div>
+          <div class="ok">Tudo acontece nesta página</div>`;
+      } else {
+        tips.innerHTML = `
+          <div class="ok">Gere e pague no banco ou lotérica</div>
+          <div class="ok">Confirmação em até 3 dias úteis</div>`;
+      }
+    }
+    setTips('pix');
+
+    function showBlock(kind) {
+      document.querySelector('#card-block').classList.toggle('hidden', kind !== 'card');
+      document.querySelector('#boleto-block').classList.toggle('hidden', kind !== 'boleto');
+    }
+
+    // Mercado Pago inicialização (somente 1x)
+    try{
+      const pub = (window.MP_PUBLIC_KEY || '').trim();
+      if (!pub) {
+        console.error('MP_PUBLIC_KEY não definida. Defina window.MP_PUBLIC_KEY no início do seu script.');
+        return;
+      }
+      mp = new MercadoPago(pub, { locale: 'pt-BR' });
+
+      // CardForm (tokenização segura)
+      cardForm = mp.cardForm({
+        amount: '0', // atualizado dinamicamente antes de pagar
+        iframe: true,
+        form: {
+          id: 'card-form',
+          cardNumber: { id: 'form-card-number', placeholder: 'Número do cartão' },
+          expirationDate: { id: 'form-card-expiration-date', placeholder: 'MM/AA' },
+          securityCode: { id: 'form-security-code', placeholder: 'CVV' },
+          cardholderName: { id: 'form-cardholder-name', placeholder: 'Nome impresso no cartão' },
+          issuer: { id: 'form-issuer', placeholder: 'Banco emissor' },
+          installments: { id: 'form-installments', placeholder: 'Parcelas' },
+        },
+        callbacks: {
+          onFormMounted: error => { 
+            if (error) {
+                console.error('Falha ao montar o CardForm:', error);
+            } else {
+                console.log('CardForm montado com sucesso ✔');
+            }
+          },
+          onError: err => console.error('Erro no CardForm:', err),
+        }
+      });
+    }catch(e){ console.error('Falha crítica ao iniciar o SDK do MercadoPago:', e); }
+
+    wirePayTips = setTips; // expõe p/ outras funções
+  }
+
+  function togglePayPanel(show){
+    const p = document.getElementById('payPanel');
+    if (!p) return;
+    p.style.display = show ? 'block' : 'none';
+    if (show) {
+      updatePayPanelTotal();
+      p.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    if (!show) document.getElementById('payResult').innerHTML = '';
+  }
+
+  function updatePayPanelTotal(){
+    const t = computeTotal();
+    const elT = document.getElementById('payPanelTotal');
+    if (elT) elT.textContent = fmtBRL(t);
+
+    // mantém amount atualizado no CardForm
+    if (cardForm) {
+      try { cardForm.update({ amount: String(t.toFixed ? t.toFixed(2) : t) }); } catch(e) {
+        console.warn('Não foi possível atualizar o valor no cardForm', e);
+      }
+    }
+  }
+
+  function getChosenMethod(){
+    const r = document.querySelector('input[name="paymethod"]:checked');
+    return r ? r.value : 'pix';
+  }
+
+  // será sobrescrita em ensurePayPanel
+  let wirePayTips = ()=>{};
+
+  async function doProcessPayment(){
+    const orderId = CURRENT_ORDER_ID || makeOrderId();
+    const productKey = cur;
+    const method = getChosenMethod();
+
+    // flags dos bumps
+    const bumps = Array.from(el('bumps').querySelectorAll('input[type=checkbox]'));
+    const flags = {}; bumps.forEach(chk => { flags[chk.dataset.id] = !!chk.checked; });
+
+    const out = document.getElementById('payResult');
+    out.innerHTML = 'Processando…';
+
+    // ===== PIX (já funcionava) =====
+    if (method === 'pix') {
+      try {
+        const r = await fetch('/mp/process-payment', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ orderId, productKey, method, bumps: flags })
+        });
+        const j = await r.json();
+
+        if (!j?.ok) {
+          out.innerHTML = `<span style="color:#f87171">Falha: ${j?.error || 'erro desconhecido'}</span>`;
+          return;
+        }
+
+        if (j.method === 'pix' && j.pix) {
+          const { qr_base64, copia_e_cola } = j.pix;
+          out.innerHTML = `
+            <div class="qr-wrap">
+              ${qr_base64 ? `<div class="qr"><img src="data:image/png;base64,${qr_base64}" alt="QR Pix"></div>` : ''}
+              <div class="pix-side">
+                <div class="muted" style="margin-bottom:6px">Código copia-e-cola:</div>
+                <pre class="codebox" id="pixCode">${copia_e_cola || ''}</pre>
+                <button id="copyPix" style="margin-top:6px;padding:8px 12px;border:0;border-radius:8px;background:#22c55e;color:#062a12;cursor:pointer;font-weight:600;">Copiar código</button>
+              </div>
+            </div>
+          `;
+          const b = document.getElementById('copyPix');
+          if (b) b.onclick = async ()=>{
+            try { await navigator.clipboard.writeText(copia_e_cola || ''); b.textContent='Copiado!'; setTimeout(()=>b.textContent='Copiar código', 1500); } catch{}
+          };
+        } else {
+          out.innerHTML = 'Pagamento criado.';
+        }
+      } catch(e){
+        out.innerHTML = `<span style="color:#f87171">Erro de rede: ${e.message}</span>`;
+      }
+      return;
+    }
+
+    // ===== CARTÃO (on-site) =====
+    if (method === 'card') {
+      try{
+        // garante amount correto
+        updatePayPanelTotal();
+
+        if (!cardForm) {
+          out.innerHTML = `<span style="color:#f87171">Falha ao iniciar o formulário do cartão.</span>`;
+          return;
+        }
+        
+        // **Processo de Tokenização e Envio**
+        const cardData = await cardForm.createCardToken();
+        if (!cardData?.id) {
+            out.innerHTML = `<span style="color:#f87171">Não foi possível tokenizar o cartão. Verifique os dados.</span>`;
+            return;
+        }
+
+        const email = (document.getElementById('form-payer-email')?.value || '').trim();
+        const docNumber = (document.getElementById('form-doc-number')?.value || '').replace(/\D+/g,'');
+
+        const payload = {
+          orderId, productKey, method,
+          bumps: flags,
+          card: {
+            token: cardData.id,
+            installments: Number(document.getElementById('form-installments')?.value) || 1,
+            payer: {
+              email,
+              identification: { type: 'CPF', number: docNumber }
+            }
+          }
+        };
+
+        const r = await fetch('/mp/process-payment', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const j = await r.json();
+
+        if (!j?.ok) {
+          out.innerHTML = `<span style="color:#f87171">Falha: ${j?.error || 'erro desconhecido'}</span>`;
+          return;
+        }
+
+        // Mostra status
+        const status = (j.status || j.payment?.status || '').toUpperCase();
+        const detail = j.payment?.status_detail || j.status_detail || '';
+        const txt =
+          status === 'APPROVED' ? 'Pagamento aprovado 🎉' :
+          status === 'IN_PROCESS' || status === 'PENDING' ? 'Pagamento em análise/pendente' :
+          status ? `Status: ${status}` : 'Pagamento criado.';
+
+        document.getElementById('card-result').innerHTML =
+          `<div class="ok" style="color:#cfe7d7">${txt}${detail ? ` — ${detail}` : ''}</div>`;
+        out.innerHTML = '';
+      }catch(e){
+        out.innerHTML = `<span style="color:#f87171">Erro: ${e.message}</span>`;
+      }
+      return;
+    }
+
+    // ===== BOLETO (on-site) =====
+    if (method === 'boleto') {
+      try{
+        const name = (document.getElementById('boleto-name')?.value || '').trim();
+        const cpf  = (document.getElementById('boleto-cpf')?.value || '').replace(/\D+/g,'');
+        const email= (document.getElementById('boleto-email')?.value || '').trim();
+
+        if (!name || !cpf || !email){
+          out.innerHTML = `<span style="color:#f87171">Preencha nome, CPF e e-mail para gerar o boleto.</span>`;
+          return;
+        }
+
+        const r = await fetch('/mp/process-payment', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            orderId, productKey, method, bumps: flags,
+            boleto: { name, cpf, email }
+          })
+        });
+        const j = await r.json();
+
+        if (!j?.ok) {
+          out.innerHTML = `<span style="color:#f87171">Falha: ${j?.error || 'erro desconhecido'}</span>`;
+          return;
+        }
+
+        const br = document.getElementById('boleto-result');
+        const link = j.boleto?.ticket_url || j.payment?.transaction_details?.external_resource_url || '';
+        const barcode = j.boleto?.barcode || j.payment?.barcode?.content || '';
+
+        br.innerHTML = `
+          <div class="ok" style="color:#cfe7d7">Boleto gerado com sucesso.</div>
+          ${link ? `<div style="margin-top:6px"><a href="${link}" target="_blank" rel="noopener" style="color:#93c5fd">Abrir boleto em nova aba</a></div>` : ''}
+          ${barcode ? `<div class="muted" style="margin-top:8px">Linha digitável:</div><pre class="codebox">${barcode}</pre>` : ''}
+        `;
+        out.innerHTML = '';
+      }catch(e){
+        out.innerHTML = `<span style="color:#f87171">Erro: ${e.message}</span>`;
+      }
+      return;
+    }
+  }
+
+  function buildRedirectUrl(orderId){
+    let url = `/mp/checkout?product=${cur}&orderId=${orderId}`;
+    const bumps = Array.from(el('bumps').querySelectorAll('input[type=checkbox]'));
+    const params = new URLSearchParams();
+    bumps.forEach(chk => params.set(chk.dataset.id, chk.checked ? '1' : '0'));
+    const glue = url.includes('?') ? '&' : '?';
+    url = url + glue + params.toString();
+    return url;
+  }
+
+  function onBuy(){
+    const orderId = makeOrderId();
+    CURRENT_ORDER_ID = orderId;
+
+    try {
+      const payload = { orderId, productKey: cur };
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/analytics/checkout-click', new Blob([JSON.stringify(payload)], { type:'application/json' }));
+      } else {
+        fetch('/analytics/checkout-click', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload), keepalive: true
+        }).catch(()=>{});
+      }
+    } catch(e){}
+
+    togglePayPanel(true);
+  }
+
+  loadConfig().catch(err=>{ console.error(err); alert('Falha ao carregar configurações.'); });
+  </script>
+
+</body>
+</html>

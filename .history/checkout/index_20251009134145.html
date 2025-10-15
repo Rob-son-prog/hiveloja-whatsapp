@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Checkout</title>
+  <style>
+    :root{--bg:#0b0c10;--card:#16181d;--muted:#8b93a1;--txt:#e9edf1;--acc:#22c55e;--bd:#232730;}
+    *{box-sizing:border-box}
+    body{margin:0;font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--txt)}
+    .wrap{max-width:980px;margin:32px auto;padding:0 16px}
+    .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab{border:1px solid var(--bd);background:#0f1115;color:var(--txt);padding:8px 12px;border-radius:10px;cursor:pointer}
+    .tab.active{background:var(--acc);color:#092b14;font-weight:700;border-color:#15803d}
+    .grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+    .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px}
+    .img{width:100%;height:280px;border-radius:12px;object-fit:cover;border:1px solid var(--bd);background:#0f1115}
+    h1{font-size:22px;margin:0}
+    h2{font-size:16px;margin:0 0 10px}
+    .muted{color:var(--muted);font-size:12px}
+    .price{font-size:22px;font-weight:800}
+    .bump{display:flex;gap:10px;align-items:flex-start;border:1px dashed #2b313b;padding:10px;border-radius:10px;margin-bottom:10px;background:#0f1115}
+    .bump input{margin-top:2px}
+    .row{display:flex;justify-content:space-between;align-items:center;margin:8px 0}
+    .total{font-size:18px;font-weight:800}
+    .btn{appearance:none;border:0;border-radius:12px;padding:12px 16px;cursor:pointer;font-weight:700;width:100%}
+    .btn-buy{background:var(--acc);color:#062a12}
+    .badge{display:inline-flex;gap:6px;align-items:center;background:#0f1115;border:1px solid var(--bd);padding:6px 10px;border-radius:999px;color:#d1d7e0}
+    .list{margin:10px 0 0;padding:0 0 0 18px;color:#cfd5de}
+    @media (max-width:880px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <h1>Checkout</h1>
+      <span class="badge" id="supportBadge">Suporte</span>
+    </div>
+
+    <div class="tabs" id="tabs"></div>
+
+    <div class="grid">
+      <!-- COL ESQ: produto -->
+      <div class="card">
+        <img id="cover" class="img" alt="Capa do produto" />
+        <h2 id="title" style="margin-top:12px"></h2>
+        <div class="muted">Resumo da oferta</div>
+        <ul class="list" id="summaryList">
+          <li>Entrega imediata após pagamento</li>
+          <li>Acesso vitalício</li>
+          <li>Atualizações quando disponíveis</li>
+        </ul>
+
+        <div style="height:12px"></div>
+        <h2>Adicionais (Order Bumps)</h2>
+        <div id="bumps"></div>
+      </div>
+
+      <!-- COL DIR: preço + comprar -->
+      <div class="card">
+        <div class="row">
+          <div class="muted">Preço base</div>
+          <div id="basePrice" class="price">R$ 0,00</div>
+        </div>
+
+        <div id="bumpLines"></div>
+
+        <div class="row" style="border-top:1px solid var(--bd);padding-top:10px;margin-top:12px">
+          <div class="total">Total</div>
+          <div id="total" class="total">R$ 0,00</div>
+        </div>
+
+        <div style="height:12px"></div>
+        <button class="btn btn-buy" id="buyBtn">Comprar</button>
+        <div class="muted" style="margin-top:8px">Pagamento seguro. Você será redirecionado para o provedor.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ------- helpers -------
+    const parseBRL = (s='')=>{
+      s = (s+'').replace(/\s/g,'').replace(/[R$\s]/gi,'').replace(/\./g,'').replace(',', '.');
+      const n = Number(s);
+      return isFinite(n) ? n : 0;
+    };
+    const fmtBRL = (n)=> n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+    const makeOrderId = ()=> 'ORD-' + Date.now().toString(36).toUpperCase().slice(-6);
+    const el= (id)=>document.getElementById(id);
+
+    // ------- estado -------
+    let CONFIG=null;
+    let cur='A'; // produto selecionado
+
+    async function loadConfig(){
+      // 1) lê ?product=A|B e define a aba inicial
+      const q = new URLSearchParams(location.search);
+      const p = (q.get('product') || 'A').toUpperCase();
+      cur = (p === 'B') ? 'B' : 'A';
+
+      // 2) busca config
+      const r = await fetch('/config',{cache:'no-store'});
+      CONFIG = await r.json();
+
+      // 3) monta tabs
+      const tabs = el('tabs');
+      const aLabel = CONFIG?.produtoA?.rotulo || 'Produto A';
+      const bLabel = CONFIG?.produtoB?.rotulo || 'Produto B';
+      tabs.innerHTML = `
+        <button class="tab" data-k="A">${aLabel}</button>
+        <button class="tab" data-k="B">${bLabel}</button>
+      `;
+      // ativa a tab vinda da URL
+      [...tabs.children].forEach(x => x.classList.toggle('active', x.dataset.k === cur));
+
+      tabs.onclick = (ev)=>{
+        const b = ev.target.closest('.tab'); if(!b) return;
+        cur = b.dataset.k;
+        [...tabs.children].forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        renderProduct();
+      };
+
+      // 4) badge suporte
+      el('supportBadge').textContent = (CONFIG.whatsapp_suporte || 'Suporte');
+
+      // 5) render inicial
+      renderProduct();
+    }
+
+    function getProd(){
+      return cur==='A' ? (CONFIG?.produtoA || {}) : (CONFIG?.produtoB || {});
+    }
+
+    function renderProduct(){
+      const p = getProd();
+
+      // imagem + título
+      el('cover').src = p.cover_url || '';
+      el('title').textContent = p.titulo || `Produto ${cur}`;
+
+      // preço base
+      el('basePrice').textContent = p.preco || 'R$ 0,00';
+
+      // bumps
+      const host = el('bumps');
+      host.innerHTML = '';
+      const lines = el('bumpLines');
+      lines.innerHTML = '';
+
+      const bumps = Array.isArray(p.bumps) ? p.bumps.slice(0,3) : [];
+      bumps.forEach(b=>{
+        const id = `bump_${b.id}`;
+        const row = document.createElement('label');
+        row.className = 'bump';
+        row.innerHTML = `
+          <input type="checkbox" id="${id}" data-id="${b.id}" data-preco="${b.preco||''}">
+          <div>
+            <div><strong>${b.titulo || 'Adicional'}</strong></div>
+            <div class="muted">${b.preco || ''}</div>
+          </div>
+        `;
+        host.appendChild(row);
+      });
+
+      // total
+      calcTotal();
+      host.onchange = calcTotal;
+
+      // comprar
+      const btn = el('buyBtn');
+      if (btn) btn.onclick = onBuy;
+    }
+
+    function calcTotal(){
+      const p = getProd();
+      let total = parseBRL(p.preco || '0');
+      const bumps = Array.from(el('bumps').querySelectorAll('input[type=checkbox]'));
+      const lines = el('bumpLines');
+      lines.innerHTML = '';
+      bumps.forEach(chk=>{
+        if(chk.checked){
+          const price = parseBRL(chk.dataset.preco||'0');
+          total += price;
+          const line = document.createElement('div');
+          line.className='row';
+          line.innerHTML = `<div class="muted">+ ${chk.nextElementSibling?.querySelector('strong')?.textContent || 'Adicional'}</div>
+                            <div>${chk.dataset.preco || ''}</div>`;
+          lines.appendChild(line);
+        }
+      });
+      el('total').textContent = fmtBRL(total);
+    }
+
+  function onBuy(){
+  const p = getProd();
+  const orderId = makeOrderId();
+
+  // monte SEMPRE a rota do MP com base na aba atual (A/B)
+  let url = `/mp/checkout?product=${cur}&orderId=${orderId}`;
+
+  // flags de bumps (se quiser levar junto)
+  const bumps = Array.from(el('bumps').querySelectorAll('input[type=checkbox]'));
+  const params = new URLSearchParams();
+  bumps.forEach(chk => params.set(chk.dataset.id, chk.checked ? '1' : '0'));
+
+  // anexa query
+  const glue = url.includes('?') ? '&' : '?';
+  url = url + glue + params.toString();
+
+  // redireciona
+  window.location.href = url;
+}
+
+
+    loadConfig().catch(err=>{
+      console.error(err);
+      alert('Falha ao carregar configurações.');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "titulo": "Lista de Fornecedores de Atacado",
+  "texto": "Receba a lista completa imediatamente após o pagamento.",
+  "preco": "R$ 19,90",
+  "whatsapp_suporte": "+5565984361007",
+  "checkout_url": "https://pay.cakto.com.br/SEU_LINK?orderId={ORDER_ID}",
+  "saudacao": "Olá, {NAME}! 👋\n\nTenho duas opções pra você:\nA) {PROD_A_TIT} — {PROD_A_PRECO}\nB) {PROD_B_TIT} — {PROD_B_PRECO}\n\nToque no botão ou digite A ou B.\n(Se os botões não aparecerem, digite A ou B).",
+  "produtoA": {
+    "rotulo": "Produto A",
+    "titulo": "Lista de Fornecedores Premium",
+    "preco": "R$ 19,90",
+    "checkout_url": "https://pay.cakto.com.br/SEU_LINK_A?orderId={ORDER_ID}",
+    "cover_url": "",
+    "bumps": [
+      { "id": "b1", "titulo": "Bônus #1", "preco": "R$ 5,90" },
+      { "id": "b2", "titulo": "Planilha", "preco": "R$ 7,90" },
+      { "id": "b3", "titulo": "Atualizações", "preco": "R$ 9,90" }
+    ]
+  },
+  "produtoB": {
+    "rotulo": "Produto B",
+    "titulo": "Lista com Contatos Extras",
+    "preco": "R$ 29,90",
+    "checkout_url": "https://pay.cakto.com.br/SEU_LINK_B?orderId={ORDER_ID}",
+    "cover_url": "",
+    "bumps": [
+      { "id": "b1", "titulo": "Garantia estendida", "preco": "R$ 6,90" },
+      { "id": "b2", "titulo": "Mentoria", "preco": "R$ 14,90" },
+      { "id": "b3", "titulo": "Templates", "preco": "R$ 4,90" }
+    ]
+  }
+}

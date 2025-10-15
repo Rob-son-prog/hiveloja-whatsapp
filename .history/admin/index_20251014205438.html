@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>Painel — Lista de Fornecedores</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#fafafa; }
+    .wrap { max-width: 920px; margin: 32px auto; background:#fff; padding: 24px; border-radius: 14px; box-shadow: 0 1px 12px rgba(0,0,0,.06); }
+    h1 { margin: 0 0 12px; font-size: 22px; }
+    .grid { display: grid; gap: 12px; }
+    .col2 { grid-template-columns: 1fr 1fr; }
+    label { font-size: 13px; color:#444; margin-bottom: 4px; display:block; }
+    input, textarea { width: 100%; padding: 10px 12px; border:1px solid #ddd; border-radius:10px; background:#fff; }
+    textarea { min-height: 110px; resize: vertical; }
+    .muted { font-size:12px; color:#666; }
+    .card { padding:16px; border:1px solid #eee; border-radius:12px; background:#fcfcfc; }
+    .row { display:flex; gap:8px; align-items:center; flex-wrap: wrap; }
+    .btn { padding:10px 16px; border-radius:10px; border:0; background:#111; color:#fff; cursor:pointer; }
+    .btn.outline { background:#f2f2f2; color:#111; }
+    .ok { color:#118a4e; margin-left:8px; font-size:13px; }
+    .danger { color:#b32d2e; font-size:12px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+    /* ——— extra da área de campanhas ——— */
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#eef3ff; color:#1d3dbf; font-size:12px; }
+    .hr { height:1px; background:#eee; margin:12px 0; }
+    .right { text-align:right; }
+    .codebox { background:#f7f7f7; border:1px solid #eee; padding:10px; border-radius:10px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size:12px; max-height:140px; overflow:auto; }
+
+    .backdash {
+    position: fixed;
+    top: 14px;
+    right: 14px; /* troque para left:14px se preferir no canto esquerdo */
+    z-index: 9999;
+    background: #22c55e;
+    color: #062a12;
+    font: 600 14px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    padding: 10px 14px;
+    border-radius: 10px;
+    text-decoration: none;
+    box-shadow: 0 6px 18px rgba(0,0,0,.35);
+    border: 0;
+    transition: transform .06s ease, filter .2s ease;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .backdash:hover { transform: translateY(-1px); filter: brightness(1.05); }
+  .backdash:active { transform: translateY(0); }
+  .backdash svg { width: 16px; height: 16px; }
+  </style>
+</head>
+<body>
+  <a href="/admin/dashboard.html" class="backdash" title="Voltar ao Dashboard">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M15 18l-6-6 6-6"/>
+  </svg>
+  Dashboard
+</a>
+
+  <div class="wrap">
+    <h1>Configurar página/fluxo da <span class="mono">Lista de Fornecedores</span></h1>
+
+    <div class="grid">
+      <!-- Oferta “menu” (fallback) -->
+      <div class="card">
+        <h3>Mensagem padrão (“menu”)</h3>
+        <div class="grid">
+          <div>
+            <label>Título</label>
+            <input id="titulo" placeholder="Lista de Fornecedores de Atacado">
+          </div>
+          <div class="col2">
+            <div>
+              <label>Preço</label>
+              <input id="preco" placeholder="R$ 19,90">
+            </div>
+            <div>
+              <label>WhatsApp de suporte (E.164)</label>
+              <input id="whatsapp_suporte" placeholder="+5565984361007">
+            </div>
+          </div>
+          <div>
+            <label>Texto persuasivo</label>
+            <textarea id="texto" placeholder="Receba a lista completa imediatamente após o pagamento."></textarea>
+          </div>
+          <div>
+            <label>Checkout URL (usa <span class="mono">{ORDER_ID}</span>)</label>
+            <input id="checkout_url" placeholder="https://pay.cakto.com.br/SEU_LINK?orderId={ORDER_ID}">
+            <div class="muted">Ex.: https://pay.cakto.com.br/<b>seu_link</b>?orderId={<b>ORDER_ID</b>}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Saudação + Botões -->
+      <div class="card">
+        <h3>Saudação inicial + botões</h3>
+        <div class="grid col2">
+          <div>
+            <label>Saudação (suporta <span class="mono">{NAME}</span>)</label>
+            <textarea id="saudacao" placeholder="Olá, {NAME}! 👋&#10;&#10;Tenho duas opções pra você:&#10;A) ...&#10;B) ...&#10;&#10;Toque no botão ou digite A ou B."></textarea>
+            <div class="muted">O bot troca <span class="mono">{NAME}</span> pelo nome do contato quando disponível.</div>
+          </div>
+          <div>
+            <label>Rótulo do botão A</label>
+            <input id="botaoA" placeholder="Produto A">
+            <label style="margin-top:8px">Rótulo do botão B</label>
+            <input id="botaoB" placeholder="Produto B">
+          </div>
+        </div>
+      </div>
+
+      <!-- Produto A -->
+      <div class="card">
+        <h3>Produto A</h3>
+        <div class="grid">
+          <div class="col2">
+            <div>
+              <label>Rótulo do botão (exibição)</label>
+              <input id="produtoA_rotulo" placeholder="Oferta A">
+            </div>
+            <div>
+              <label>Título</label>
+              <input id="produtoA_titulo" placeholder="Lista de Fornecedores Premium">
+            </div>
+          </div>
+          <div class="col2">
+            <div>
+              <label>Preço</label>
+              <input id="produtoA_preco" placeholder="R$ 19,90">
+            </div>
+            <div>
+              <label>Checkout URL (usa <span class="mono">{ORDER_ID}</span>)</label>
+              <input id="produtoA_checkout" placeholder="https://pay.cakto.com.br/SEU_LINK_A?orderId={ORDER_ID}">
+            </div>
+          </div>
+          <div class="muted">Preview: <span id="prevA" class="mono">–</span></div>
+        </div>
+      </div>
+
+      <!-- Produto B -->
+      <div class="card">
+        <h3>Produto B</h3>
+        <div class="grid">
+          <div class="col2">
+            <div>
+              <label>Rótulo do botão (exibição)</label>
+              <input id="produtoB_rotulo" placeholder="Oferta B">
+            </div>
+            <div>
+              <label>Título</label>
+              <input id="produtoB_titulo" placeholder="Lista com Contatos Extras">
+            </div>
+          </div>
+          <div class="col2">
+            <div>
+              <label>Preço</label>
+              <input id="produtoB_preco" placeholder="R$ 29,90">
+            </div>
+            <div>
+              <label>Checkout URL (usa <span class="mono">{ORDER_ID}</span>)</label>
+              <input id="produtoB_checkout" placeholder="https://pay.cakto.com.br/SEU_LINK_B?orderId={ORDER_ID}">
+            </div>
+          </div>
+          <div class="muted">Preview: <span id="prevB" class="mono">–</span></div>
+        </div>
+      </div>
+
+      <!-- Ações -->
+      <div class="row">
+        <button id="save" class="btn">Salvar</button>
+        <button id="reload" class="btn outline">Recarregar</button>
+        <span id="status" class="ok" style="display:none">salvo ✓</span>
+        <span id="err" class="danger" style="display:none">falha ao salvar</span>
+      </div>
+
+      <!-- Campanhas (beta) -->
+      <div class="card">
+        <h3>Campanhas de WhatsApp <span class="pill">beta</span></h3>
+        <div class="grid">
+          <div class="col2">
+            <div>
+              <label>Nome da campanha</label>
+              <input id="c_name" placeholder="Ex.: Reengajamento D+1">
+            </div>
+            <div>
+              <label>Início (data/hora)</label>
+              <input id="c_start" type="datetime-local">
+            </div>
+          </div>
+
+          <div class="col2">
+            <div>
+              <label>Alvo: últimos contato há (dias) — envia para quem <b>≥</b> esse tempo</label>
+              <input id="c_days" type="number" min="0" step="1" placeholder="1">
+            </div>
+            <div>
+              <label>Excluir quem já comprou</label>
+              <select id="c_exclude_paid">
+                <option value="yes">Sim, excluir</option>
+                <option value="no">Não</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="col2">
+            <div>
+              <label>Janela 24h</label>
+              <select id="c_mode">
+                <option value="auto">Automático (texto livre ≤24h, template &gt;24h)</option>
+                <option value="only24">Somente dentro de 24h (texto livre)</option>
+                <option value="onlyTemplate">Sempre com template (recomendado p/ &gt;24h)</option>
+              </select>
+              <div class="muted">Restrições Meta: fora de 24h só com <b>template aprovado</b>.</div>
+            </div>
+            <div>
+              <label>Intervalo entre envios (segundos)</label>
+              <div class="row" style="gap:6px">
+                <input id="c_min_s" type="number" min="1" value="60" style="max-width:120px">
+                <span>até</span>
+                <input id="c_max_s" type="number" min="1" value="150" style="max-width:120px">
+                <span class="muted">com leve aleatoriedade</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="col2">
+            <div>
+              <label>Mensagem (texto livre — usada dentro de 24h)</label>
+              <textarea id="c_text" placeholder="Oi {NAME}! Tudo bem? ..."></textarea>
+              <div class="muted">Você pode usar variáveis: {NAME}, {PROD_A_TIT}, etc.</div>
+            </div>
+            <div>
+              <label>Template (nome) — usado fora de 24h</label>
+              <input id="c_tpl" placeholder="ex.: oferta_followup_1">
+              <label style="margin-top:8px">Idioma</label>
+              <input id="c_tpl_lang" value="pt_BR" placeholder="pt_BR">
+              <label style="margin-top:8px">Parâmetros do template (separe por vírgula)</label>
+              <input id="c_tpl_params" placeholder="Ex.: Robson, 29,90, hoje">
+              <label style="margin-top:8px">Mídia (URL opcional do template)</label>
+              <input id="c_tpl_media" placeholder="https://.../img.jpg">
+            </div>
+          </div>
+
+          <div class="col2">
+            <div>
+              <label>Teste com este número (E.164) — opcional</label>
+              <input id="c_test_to" placeholder="+5565...">
+              <div class="muted">Se preenchido, gera a campanha em modo teste (apenas este número).</div>
+            </div>
+            <div>
+              <label>Prévia do JSON</label>
+              <div id="c_preview" class="codebox">–</div>
+            </div>
+          </div>
+
+          <div class="right">
+            <button id="c_preview_btn" class="btn outline">Gerar prévia</button>
+            <button id="c_create_btn" class="btn">Salvar & Iniciar (próximo passo)</button>
+          </div>
+        </div>
+      </div>
+      <!-- /Campanhas -->
+    </div>
+  </div>
+
+ <script>
+  const S = id => document.getElementById(id);
+
+  function fill(cfg){
+    S('titulo').value = cfg.titulo || '';
+    S('texto').value = cfg.texto || '';
+    S('preco').value = cfg.preco || '';
+    S('whatsapp_suporte').value = cfg.whatsapp_suporte || '';
+    S('checkout_url').value = cfg.checkout_url || '';
+
+    const saud = cfg.saudacao || 'Olá, {NAME}! 👋\n\nTenho duas opções pra você:\nA) ' + (cfg?.produtoA?.titulo||'Produto A') + ' — ' + (cfg?.produtoA?.preco||'R$') + '\nB) ' + (cfg?.produtoB?.titulo||'Produto B') + ' — ' + (cfg?.produtoB?.preco||'R$') + '\n\nToque no botão ou digite A ou B.';
+    S('saudacao').value = saud;
+
+    S('botaoA').value = (cfg?.produtoA?.rotulo) || 'Produto A';
+    S('botaoB').value = (cfg?.produtoB?.rotulo) || 'Produto B';
+
+    S('produtoA_rotulo').value = (cfg?.produtoA?.rotulo) || 'Oferta A';
+    S('produtoA_titulo').value = (cfg?.produtoA?.titulo) || 'Lista de Fornecedores Premium';
+    S('produtoA_preco').value = (cfg?.produtoA?.preco) || 'R$ 19,90';
+    S('produtoA_checkout').value = (cfg?.produtoA?.checkout_url) || '';
+
+    S('produtoB_rotulo').value = (cfg?.produtoB?.rotulo) || 'Oferta B';
+    S('produtoB_titulo').value = (cfg?.produtoB?.titulo) || 'Lista com Contatos Extras';
+    S('produtoB_preco').value = (cfg?.produtoB?.preco) || 'R$ 29,90';
+    S('produtoB_checkout').value = (cfg?.produtoB?.checkout_url) || '';
+
+    updatePreview();
+  }
+
+  function collect(){
+    return {
+      titulo: S('titulo').value.trim(),
+      texto: S('texto').value.trim(),
+      preco: S('preco').value.trim(),
+      whatsapp_suporte: S('whatsapp_suporte').value.trim(),
+      checkout_url: S('checkout_url').value.trim(),
+      saudacao: S('saudacao').value,
+
+      produtoA: {
+        rotulo: S('produtoA_rotulo').value.trim() || S('botaoA').value.trim(),
+        titulo: S('produtoA_titulo').value.trim(),
+        preco:  S('produtoA_preco').value.trim(),
+        checkout_url: S('produtoA_checkout').value.trim()
+      },
+      produtoB: {
+        rotulo: S('produtoB_rotulo').value.trim() || S('botaoB').value.trim(),
+        titulo: S('produtoB_titulo').value.trim(),
+        preco:  S('produtoB_preco').value.trim(),
+        checkout_url: S('produtoB_checkout').value.trim()
+      }
+    };
+  }
+
+  function updatePreview(){
+    const oa = (S('produtoA_checkout').value || '').replace('{ORDER_ID}','ORD-EXEMPLO');
+    const ob = (S('produtoB_checkout').value || '').replace('{ORDER_ID}','ORD-EXEMPLO');
+    S('prevA').textContent = oa || '—';
+    S('prevB').textContent = ob || '—';
+  }
+  ['produtoA_checkout','produtoB_checkout'].forEach(id => S(id).addEventListener('input', updatePreview));
+
+  async function load(){
+    const r = await fetch('/config');
+    const cfg = await r.json();
+    fill(cfg);
+  }
+
+  async function save(){
+    S('status').style.display='none';
+    S('err').style.display='none';
+    const body = collect();
+    const r = await fetch('/config', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const j = await r.json();
+    if (j?.ok) { S('status').style.display='inline'; } else { S('err').style.display='inline'; }
+  }
+
+  S('save').onclick = save;
+  S('reload').onclick = load;
+  load();
+
+  // ===== Campanhas =====
+  function buildCampaignPayload(){
+    const startIso = (S('c_start').value ? new Date(S('c_start').value).toISOString() : null);
+    const params = (S('c_tpl_params').value || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    const minS = Math.max(1, Number(S('c_min_s').value || 60));
+    const maxS = Math.max(minS, Number(S('c_max_s').value || 150));
+
+    return {
+      name: S('c_name').value.trim() || 'Campanha sem nome',
+      start_at: startIso,
+      filter: {
+        last_incoming_gte_days: Number(S('c_days').value || 0), // >= X dias
+        exclude_paid: S('c_exclude_paid').value === 'yes'
+      },
+      policy: {
+        mode: S('c_mode').value, // auto / only24 / onlyTemplate
+        throttle_seconds_min: minS,
+        throttle_seconds_max: maxS
+      },
+      content: {
+        text_24h: S('c_text').value,
+        template_name: S('c_tpl').value.trim(),
+        template_lang: S('c_tpl_lang').value.trim() || 'pt_BR',
+        template_params: params,
+        template_media_url: S('c_tpl_media').value.trim() || null
+      },
+      test_to: (S('c_test_to').value || '').trim()
+    };
+  }
+
+  function showPreview(){
+    const payload = buildCampaignPayload();
+    console.log('[Prévia campanha]', payload);
+    S('c_preview').textContent = JSON.stringify(payload, null, 2);
+  }
+  S('c_preview_btn').onclick = showPreview;
+
+  // ====== NOVO: integra com as rotas do backend ======
+  let CURRENT_CAMPAIGN_ID = '';
+
+  async function apiCreateCampaign(payload){
+    const r = await fetch('/campaigns', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'Falha ao salvar campanha');
+    return j; // { ok:true, id, campaign }
+  }
+
+  async function apiStartCampaign(id){
+    const r = await fetch(`/campaigns/${id}/start`, { method: 'POST' });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'Falha ao iniciar campanha');
+    return j; // { ok:true, queued, campaign }
+  }
+
+  async function apiStopCampaign(id){
+    const r = await fetch(`/campaigns/${id}/stop`, { method: 'POST' });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'Falha ao pausar campanha');
+    return j;
+  }
+
+  function setLoading(btn, on){
+    if (!btn) return;
+    btn.disabled = !!on;
+    btn.dataset._originalText ??= btn.textContent;
+    btn.textContent = on ? 'Aguarde…' : btn.dataset._originalText;
+  }
+
+  // Botão "Salvar" (opcional)
+  const btnSalvarCamp = S('c_save_btn');
+  if (btnSalvarCamp) {
+    btnSalvarCamp.onclick = async () => {
+      try {
+        setLoading(btnSalvarCamp, true);
+        const payload = buildCampaignPayload();
+        const j = await apiCreateCampaign(payload);
+        CURRENT_CAMPAIGN_ID = j.id;
+        alert(`Campanha salva! ID: ${j.id}`);
+      } catch(e) {
+        console.error(e);
+        alert('Erro ao salvar a campanha.');
+      } finally {
+        setLoading(btnSalvarCamp, false);
+      }
+    };
+  }
+
+  // Botão "Salvar & Iniciar" (usa o id="c_create_btn" que você já tinha)
+  const btnSalvarIniciar = S('c_create_btn');
+  if (btnSalvarIniciar) {
+    btnSalvarIniciar.onclick = async () => {
+      try {
+        setLoading(btnSalvarIniciar, true);
+        const payload = buildCampaignPayload();
+
+        // se ainda não existe, salva primeiro
+        if (!CURRENT_CAMPAIGN_ID) {
+          const j = await apiCreateCampaign(payload);
+          CURRENT_CAMPAIGN_ID = j.id;
+        }
+        // inicia
+        const k = await apiStartCampaign(CURRENT_CAMPAIGN_ID);
+        showPreview(); // mantém a prévia atualizada
+        alert(`Campanha iniciada! Contatos enfileirados: ${k.queued}`);
+      } catch (e) {
+        console.error(e);
+        alert('Erro ao iniciar a campanha.');
+      } finally {
+        setLoading(btnSalvarIniciar, false);
+      }
+    };
+  }
+
+  // Botão "Pausar" (opcional)
+  const btnPausar = S('c_stop_btn');
+  if (btnPausar) {
+    btnPausar.onclick = async () => {
+      if (!CURRENT_CAMPAIGN_ID) { alert('Nenhuma campanha carregada. Salve/inicie primeiro.'); return; }
+      try {
+        setLoading(btnPausar, true);
+        await apiStopCampaign(CURRENT_CAMPAIGN_ID);
+        alert('Campanha pausada.');
+      } catch (e) {
+        console.error(e);
+        alert('Erro ao pausar a campanha.');
+      } finally {
+        setLoading(btnPausar, false);
+      }
+    };
+  }
+</script>
+
+</body>
+</html>

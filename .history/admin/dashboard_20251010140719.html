@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Dashboard — Hiveloja</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{--bg:#0b0c10;--card:#16181d;--muted:#8b93a1;--txt:#e9edf1;--acc:#22c55e;--bd:#232730}
+    *{box-sizing:border-box}
+    body{margin:0;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--txt)}
+    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+    h1{font-size:22px;margin:0 0 12px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .menu a{display:inline-block;margin-right:8px;padding:8px 12px;border:1px solid var(--bd);border-radius:10px;background:#101217;color:var(--txt);text-decoration:none}
+    .menu a.primary{background:var(--acc);color:#062a12;border-color:transparent}
+    .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin:14px 0}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .kpi{background:#101217;border:1px solid var(--bd);border-radius:12px;padding:12px}
+    .kpi h3{font-size:12px;margin:0;color:#cdd3dc}
+    .kpi .v{font-size:26px;font-weight:700;margin-top:6px}
+    label{color:#cdd3dc;margin-right:8px}
+    input[type=date]{background:#101217;color:var(--txt);border:1px solid var(--bd);border-radius:8px;padding:6px 8px}
+    .muted{color:var(--muted);font-size:12px}
+    canvas{background:#0f1115;border:1px solid var(--bd);border-radius:12px;padding:8px}
+    @media (max-width:900px){.kpis{grid-template-columns:1fr 1fr}}
+    @media (max-width:560px){.kpis{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Dashboard</h1>
+
+    <div class="menu card">
+      <strong>Acessos</strong> ·
+      <a href="/admin/index.html">Config bot</a>
+      <a href="/admin/editar-checkout.html">Editar Checkout</a>
+      <a class="primary" href="/checkout/">Abrir Checkout</a>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <label>Período:</label>
+          <input id="from" type="date"> —
+          <input id="to" type="date">
+          <button id="apply" style="margin-left:8px;padding:6px 10px;border:0;border-radius:8px;background:var(--acc);color:#062a12;cursor:pointer;">Aplicar</button>
+        </div>
+        <div class="muted">As métricas são agregadas localmente (arquivos *.json do projeto).</div>
+      </div>
+
+      <div class="kpis" style="margin-top:12px">
+        <div class="kpi">
+          <h3>Cliques no checkout</h3>
+          <div id="k_checkout_clicks" class="v">–</div>
+        </div>
+        <div class="kpi">
+          <h3>Contatos que enviaram msg</h3>
+          <div id="k_leads_msg" class="v">–</div>
+        </div>
+        <div class="kpi">
+          <h3>Compras aprovadas</h3>
+          <div id="k_sales" class="v">–</div>
+        </div>
+        <div class="kpi">
+          <h3>Receita (R$)</h3>
+          <div id="k_revenue" class="v">–</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Funil (visão geral)</h3>
+      <div class="muted">Do clique no “Comprar” → mensagens recebidas → compras concluídas.</div>
+      <canvas id="funnel" height="200"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Série diária</h3>
+      <canvas id="series" height="220"></canvas>
+    </div>
+  </div>
+
+  <script>
+    const $ = sel => document.querySelector(sel);
+
+    // datas padrão (últimos 7 dias)
+    (() => {
+      const to = new Date();
+      const from = new Date(Date.now() - 6*24*3600*1000);
+      $('#to').value = to.toISOString().slice(0,10);
+      $('#from').value = from.toISOString().slice(0,10);
+    })();
+
+    let funnelChart, seriesChart;
+
+    async function loadStats(){
+      const qs = new URLSearchParams({ from: $('#from').value, to: $('#to').value }).toString();
+      const r = await fetch('/analytics/stats?'+qs);
+      const j = await r.json();
+
+      // KPIs
+      $('#k_checkout_clicks').textContent = j.totals.checkout_clicks;
+      $('#k_leads_msg').textContent = j.totals.unique_msg_in;
+      $('#k_sales').textContent = j.totals.sales_count;
+      $('#k_revenue').textContent = (j.totals.revenue.toFixed(2)).replace('.',',');
+
+      // FUNIL
+      const funnelData = [j.totals.checkout_clicks, j.totals.unique_msg_in, j.totals.sales_count];
+      const funnelLabels = ['Cliques', 'Msgs recebidas', 'Compras'];
+
+      if (funnelChart) funnelChart.destroy();
+      funnelChart = new Chart($('#funnel'), {
+        type:'bar',
+        data:{ labels:funnelLabels, datasets:[{ label:'Etapas', data:funnelData }] },
+        options:{ plugins:{legend:{display:false}}}
+      });
+
+      // Série diária
+      const labels = j.daily.map(d => d.date);
+      const clicks = j.daily.map(d => d.checkout_clicks);
+      const msgs   = j.daily.map(d => d.unique_msg_in);
+      const sales  = j.daily.map(d => d.sales_count);
+
+      if (seriesChart) seriesChart.destroy();
+      seriesChart = new Chart($('#series'), {
+        type:'line',
+        data: {
+          labels,
+          datasets: [
+            { label:'Cliques', data: clicks },
+            { label:'Msgs', data: msgs },
+            { label:'Vendas', data: sales }
+          ]
+        },
+        options:{ tension:.25 }
+      });
+    }
+
+    $('#apply').onclick = loadStats;
+    loadStats();
+  </script>
+</body>
+</html>

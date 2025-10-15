@@ -1,0 +1,20 @@
+{
+  "titulo": "Lista de Fornecedores de Atacado",
+  "texto": "Receba a lista completa imediatamente após o pagamento.",
+  "preco": "R$ 19,90",
+  "whatsapp_suporte": "+5565984361007",
+  "checkout_url": "https://pay.cakto.com.br/ej6ed46_527659?orderId={ORDER_ID}",
+  "saudacao": "Olá, {NAME}! 👋\n\nTenho duas opções pra você:\nA) Produto A — R$\nB) Produto B — R$\n\nToque no botão ou digite A ou B.",
+  "produtoA": {
+    "rotulo": "Oferta A",
+    "titulo": "Lista de Fornecedores Premium",
+    "preco": "R$ 19,90",
+    "checkout_url": "https://pay.cakto.com.br/ej6ed46_527659?orderId={ORDER_ID}"
+  },
+  "produtoB": {
+    "rotulo": "Oferta B",
+    "titulo": "Lista com Contatos Extras",
+    "preco": "R$ 29,90",
+    "checkout_url": "https://pay.cakto.com.br/ej6ed46_527659?orderId={ORDER_ID}"
+  }
+}

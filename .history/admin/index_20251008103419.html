@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>Painel — Lista de Fornecedores</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#fafafa; }
+    .wrap { max-width: 920px; margin: 32px auto; background:#fff; padding: 24px; border-radius: 14px; box-shadow: 0 1px 12px rgba(0,0,0,.06); }
+    h1 { margin: 0 0 12px; font-size: 22px; }
+    .grid { display: grid; gap: 12px; }
+    .col2 { grid-template-columns: 1fr 1fr; }
+    label { font-size: 13px; color:#444; margin-bottom: 4px; display:block; }
+    input, textarea { width: 100%; padding: 10px 12px; border:1px solid #ddd; border-radius:10px; background:#fff; }
+    textarea { min-height: 110px; resize: vertical; }
+    .muted { font-size:12px; color:#666; }
+    .card { padding:16px; border:1px solid #eee; border-radius:12px; background:#fcfcfc; }
+    .row { display:flex; gap:8px; align-items:center; flex-wrap: wrap; }
+    .btn { padding:10px 16px; border-radius:10px; border:0; background:#111; color:#fff; cursor:pointer; }
+    .btn.outline { background:#f2f2f2; color:#111; }
+    .ok { color:#118a4e; margin-left:8px; font-size:13px; }
+    .danger { color:#b32d2e; font-size:12px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Configurar página/fluxo da <span class="mono">Lista de Fornecedores</span></h1>
+
+    <div class="grid">
+      <!-- Oferta “menu” (fallback) -->
+      <div class="card">
+        <h3>Mensagem padrão (“menu”)</h3>
+        <div class="grid">
+          <div>
+            <label>Título</label>
+            <input id="titulo" placeholder="Lista de Fornecedores de Atacado">
+          </div>
+          <div class="col2">
+            <div>
+              <label>Preço</label>
+              <input id="preco" placeholder="R$ 19,90">
+            </div>
+            <div>
+              <label>WhatsApp de suporte (E.164)</label>
+              <input id="whatsapp_suporte" placeholder="+5565984361007">
+            </div>
+          </div>
+          <div>
+            <label>Texto persuasivo</label>
+            <textarea id="texto" placeholder="Receba a lista completa imediatamente após o pagamento."></textarea>
+          </div>
+          <div>
+            <label>Checkout URL (usa <span class="mono">{ORDER_ID}</span>)</label>
+            <input id="checkout_url" placeholder="https://pay.cakto.com.br/SEU_LINK?orderId={ORDER_ID}">
+            <div class="muted">Ex.: https://pay.cakto.com.br/<b>seu_link</b>?orderId={<b>ORDER_ID</b>}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Saudação + Botões -->
+      <div class="card">
+        <h3>Saudação inicial + botões</h3>
+        <div class="grid col2">
+          <div>
+            <label>Saudação (suporta <span class="mono">{NAME}</span>)</label>
+            <textarea id="saudacao" placeholder="Olá, {NAME}! 👋&#10;&#10;Tenho duas opções pra você:&#10;A) ...&#10;B) ...&#10;&#10;Toque no botão ou digite A ou B."></textarea>
+            <div class="muted">O bot troca <span class="mono">{NAME}</span> pelo nome do contato quando disponível.</div>
+          </div>
+          <div>
+            <label>Rótulo do botão A</label>
+            <input id="botaoA" placeholder="Produto A">
+            <label style="margin-top:8px">Rótulo do botão B</label>
+            <input id="botaoB" placeholder="Produto B">
+          </div>
+        </div>
+      </div>
+
+      <!-- Produto A -->
+      <div class="card">
+        <h3>Produto A</h3>
+        <div class="grid">
+          <div class="col2">
+            <div>
+              <label>Rótulo do botão (exibição)</label>
+              <input id="produtoA_rotulo" placeholder="Oferta A">
+            </div>
+            <div>
+              <label>Título</label>
+              <input id="produtoA_titulo" placeholder="Lista de Fornecedores Premium">
+            </div>
+          </div>
+          <div class="col2">
+            <div>
+              <label>Preço</label>
+              <input id="produtoA_preco" placeholder="R$ 19,90">
+            </div>
+            <div>
+              <label>Checkout URL (usa <span class="mono">{ORDER_ID}</span>)</label>
+              <input id="produtoA_checkout" placeholder="https://pay.cakto.com.br/SEU_LINK_A?orderId={ORDER_ID}">
+            </div>
+          </div>
+          <div class="muted">Preview: <span id="prevA" class="mono">–</span></div>
+        </div>
+      </div>
+
+      <!-- Produto B -->
+      <div class="card">
+        <h3>Produto B</h3>
+        <div class="grid">
+          <div class="col2">
+            <div>
+              <label>Rótulo do botão (exibição)</label>
+              <input id="produtoB_rotulo" placeholder="Oferta B">
+            </div>
+            <div>
+              <label>Título</label>
+              <input id="produtoB_titulo" placeholder="Lista com Contatos Extras">
+            </div>
+          </div>
+          <div class="col2">
+            <div>
+              <label>Preço</label>
+              <input id="produtoB_preco" placeholder="R$ 29,90">
+            </div>
+            <div>
+              <label>Checkout URL (usa <span class="mono">{ORDER_ID}</span>)</label>
+              <input id="produtoB_checkout" placeholder="https://pay.cakto.com.br/SEU_LINK_B?orderId={ORDER_ID}">
+            </div>
+          </div>
+          <div class="muted">Preview: <span id="prevB" class="mono">–</span></div>
+        </div>
+      </div>
+
+      <!-- Ações -->
+      <div class="row">
+        <button id="save" class="btn">Salvar</button>
+        <button id="reload" class="btn outline">Recarregar</button>
+        <span id="status" class="ok" style="display:none">salvo ✓</span>
+        <span id="err" class="danger" style="display:none">falha ao salvar</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const S = id => document.getElementById(id);
+
+    function fill(cfg){
+      S('titulo').value = cfg.titulo || '';
+      S('texto').value = cfg.texto || '';
+      S('preco').value = cfg.preco || '';
+      S('whatsapp_suporte').value = cfg.whatsapp_suporte || '';
+      S('checkout_url').value = cfg.checkout_url || '';
+
+      const saud = cfg.saudacao || 'Olá, {NAME}! 👋\n\nTenho duas opções pra você:\nA) ' + (cfg?.produtoA?.titulo||'Produto A') + ' — ' + (cfg?.produtoA?.preco||'R$') + '\nB) ' + (cfg?.produtoB?.titulo||'Produto B') + ' — ' + (cfg?.produtoB?.preco||'R$') + '\n\nToque no botão ou digite A ou B.';
+      S('saudacao').value = saud;
+
+      S('botaoA').value = (cfg?.produtoA?.rotulo) || 'Produto A';
+      S('botaoB').value = (cfg?.produtoB?.rotulo) || 'Produto B';
+
+      S('produtoA_rotulo').value = (cfg?.produtoA?.rotulo) || 'Oferta A';
+      S('produtoA_titulo').value = (cfg?.produtoA?.titulo) || 'Lista de Fornecedores Premium';
+      S('produtoA_preco').value = (cfg?.produtoA?.preco) || 'R$ 19,90';
+      S('produtoA_checkout').value = (cfg?.produtoA?.checkout_url) || '';
+
+      S('produtoB_rotulo').value = (cfg?.produtoB?.rotulo) || 'Oferta B';
+      S('produtoB_titulo').value = (cfg?.produtoB?.titulo) || 'Lista com Contatos Extras';
+      S('produtoB_preco').value = (cfg?.produtoB?.preco) || 'R$ 29,90';
+      S('produtoB_checkout').value = (cfg?.produtoB?.checkout_url) || '';
+
+      updatePreview();
+    }
+
+    function collect(){
+      return {
+        titulo: S('titulo').value.trim(),
+        texto: S('texto').value.trim(),
+        preco: S('preco').value.trim(),
+        whatsapp_suporte: S('whatsapp_suporte').value.trim(),
+        checkout_url: S('checkout_url').value.trim(),
+        saudacao: S('saudacao').value,
+
+        produtoA: {
+          rotulo: S('produtoA_rotulo').value.trim() || S('botaoA').value.trim(),
+          titulo: S('produtoA_titulo').value.trim(),
+          preco:  S('produtoA_preco').value.trim(),
+          checkout_url: S('produtoA_checkout').value.trim()
+        },
+        produtoB: {
+          rotulo: S('produtoB_rotulo').value.trim() || S('botaoB').value.trim(),
+          titulo: S('produtoB_titulo').value.trim(),
+          preco:  S('produtoB_preco').value.trim(),
+          checkout_url: S('produtoB_checkout').value.trim()
+        }
+      };
+    }
+
+    function updatePreview(){
+      const oa = (S('produtoA_checkout').value || '').replace('{ORDER_ID}','ORD-EXEMPLO');
+      const ob = (S('produtoB_checkout').value || '').replace('{ORDER_ID}','ORD-EXEMPLO');
+      S('prevA').textContent = oa || '—';
+      S('prevB').textContent = ob || '—';
+    }
+    ['produtoA_checkout','produtoB_checkout'].forEach(id => S(id).addEventListener('input', updatePreview));
+
+    async function load(){
+      const r = await fetch('/config');
+      const cfg = await r.json();
+      fill(cfg);
+    }
+
+    async function save(){
+      S('status').style.display='none';
+      S('err').style.display='none';
+      const body = collect();
+      const r = await fetch('/config', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      const j = await r.json();
+      if (j?.ok) { S('status').style.display='inline'; } else { S('err').style.display='inline'; }
+    }
+
+    S('save').onclick = save;
+    S('reload').onclick = load;
+    load();
+  </script>
+</body>
+</html>

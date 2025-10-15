@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Editar Checkout</title>
+<style>
+  :root{--bg:#0b0c10;--card:#16181d;--muted:#8b93a1;--txt:#e9edf1;--acc:#22c55e;--bd:#232730}
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--txt)}
+  .wrap{max-width:1000px;margin:24px auto;padding:0 16px}
+  h1{font-size:22px;margin:0 0 16px}
+  h3{margin:0 0 8px}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin:0 0 16px}
+  .row{display:grid;grid-template-columns:200px 1fr;gap:10px;margin:10px 0}
+  label{color:#cdd3dc}
+  input[type=text], textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--bd);background:#0f1115;color:var(--txt)}
+  textarea{min-height:80px;resize:vertical}
+  .muted{color:var(--muted);font-size:12px}
+  .btn{appearance:none;border:0;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700}
+  .btn-primary{background:var(--acc);color:#062a12}
+  .flex{display:flex;gap:10px;align-items:center}
+  .thumb{width:80px;height:80px;border-radius:10px;border:1px solid var(--bd);object-fit:cover;background:#0f1115}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .bump{border:1px dashed #2b313b;border-radius:10px;padding:10px;margin-top:8px}
+  .sub{border:1px solid var(--bd);border-radius:10px;padding:10px;margin-top:10px;background:#101217}
+  .sub h4{margin:0 0 6px;font-size:14px;color:#dfe5ee}
+
+  .backdash {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 9999;
+    background: #22c55e;
+    color: #062a12;
+    font: 600 14px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    padding: 10px 14px;
+    border-radius: 10px;
+    text-decoration: none;
+    box-shadow: 0 6px 18px rgba(0,0,0,.35);
+    border: 0;
+    transition: transform .06s ease, filter .2s ease;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .backdash:hover { transform: translateY(-1px); filter: brightness(1.05); }
+  .backdash:active { transform: translateY(0); }
+  .backdash svg { width: 16px; height: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="/admin/dashboard.html" class="backdash" title="Voltar ao Dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M15 18l-6-6 6-6"/>
+    </svg>
+    Dashboard
+  </a>
+
+  <h1>Editar Checkout</h1>
+
+  <!-- Globais -->
+  <div class="card">
+    <h3>Configurações gerais</h3>
+    <div class="row">
+      <label>WhatsApp de suporte</label>
+      <input id="whats" type="text" placeholder="+5565..." />
+    </div>
+    <div class="row">
+      <label>Saudação (WhatsApp)</label>
+      <textarea id="saudacao" placeholder="Olá, {NAME}! ..."></textarea>
+    </div>
+    <div class="muted">Dicas: use {NAME}, {PROD_A_TIT}, {PROD_A_PRECO}, {PROD_B_TIT}, {PROD_B_PRECO} na saudação se quiser.</div>
+  </div>
+
+  <div class="two">
+    <!-- Produto A -->
+    <div class="card">
+      <h3>Produto A</h3>
+      <div class="row"><label>Rótulo</label><input id="a_rotulo" type="text" placeholder="Produto A"></div>
+      <div class="row"><label>Título</label><input id="a_titulo" type="text" placeholder="Lista de Fornecedores Premium"></div>
+      <div class="row"><label>Preço</label><input id="a_preco" type="text" placeholder="R$ 19,90"></div>
+
+      <div class="row">
+        <label>Capa (URL)</label>
+        <div class="flex">
+          <input id="a_cover" type="text" placeholder="https://..." />
+          <input id="a_cover_file" type="file" accept="image/*">
+        </div>
+      </div>
+      <div class="row"><label>Preview</label><img id="a_cover_img" class="thumb" alt="Preview A" width="80" height="80"></div>
+
+      <div class="row">
+        <label>Checkout URL</label>
+        <input id="a_checkout" type="text" placeholder="/mp/checkout?product=A&orderId={ORDER_ID}">
+      </div>
+
+      <!-- ENTREGA A -->
+      <div class="sub">
+        <h4>Entrega pós-pagamento</h4>
+        <div class="row"><label>PDF (URL)</label><input id="a_pdf" type="text" placeholder="https://.../arquivo.pdf"></div>
+        <div class="row"><label>Vídeo (URL)</label><input id="a_video" type="text" placeholder="https://.../video.mp4 ou YouTube/Vimeo"></div>
+        <div class="row"><label>Link (URL)</label><input id="a_link" type="text" placeholder="https://... (área de membros/drive/etc.)"></div>
+        <div class="muted">Esses links serão enviados automaticamente ao cliente após o pagamento aprovado.</div>
+      </div>
+
+      <div class="bump">
+        <strong>Bump #1</strong>
+        <div class="row"><label>Título</label><input id="a_b1_tit" type="text" placeholder="Garantia estendida"></div>
+        <div class="row"><label>Preço</label><input id="a_b1_pre" type="text" placeholder="R$ 6,90"></div>
+        <div class="row"><label>Imagem (URL)</label>
+          <div class="flex">
+            <input id="a_b1_img" type="text" placeholder="https://...">
+            <input id="a_b1_file" type="file" accept="image/*">
+          </div>
+        </div>
+        <div class="row"><label>PDF (URL)</label><input id="a_b1_pdf" type="text" placeholder="https://.../arquivo.pdf"></div>
+        <div class="row"><label>Vídeo (URL)</label><input id="a_b1_video" type="text" placeholder="https://.../video.mp4 ou YouTube/Vimeo"></div>
+        <div class="row"><label>Link (URL)</label><input id="a_b1_link" type="text" placeholder="https://..."></div>
+      </div>
+
+      <div class="bump">
+        <strong>Bump #2</strong>
+        <div class="row"><label>Título</label><input id="a_b2_tit" type="text" placeholder="Mentoria"></div>
+        <div class="row"><label>Preço</label><input id="a_b2_pre" type="text" placeholder="R$ 14,90"></div>
+        <div class="row"><label>Imagem (URL)</label>
+          <div class="flex">
+            <input id="a_b2_img" type="text" placeholder="https://...">
+            <input id="a_b2_file" type="file" accept="image/*">
+          </div>
+        </div>
+        <div class="row"><label>PDF (URL)</label><input id="a_b2_pdf" type="text" placeholder="https://.../arquivo.pdf"></div>
+        <div class="row"><label>Vídeo (URL)</label><input id="a_b2_video" type="text" placeholder="https://.../video.mp4 ou YouTube/Vimeo"></div>
+        <div class="row"><label>Link (URL)</label><input id="a_b2_link" type="text" placeholder="https://..."></div>
+      </div>
+
+      <div class="bump">
+        <strong>Bump #3</strong>
+        <div class="row"><label>Título</label><input id="a_b3_tit" type="text" placeholder="Templates"></div>
+        <div class="row"><label>Preço</label><input id="a_b3_pre" type="text" placeholder="R$ 4,90"></div>
+        <div class="row"><label>Imagem (URL)</label>
+          <div class="flex">
+            <input id="a_b3_img" type="text" placeholder="https://...">
+            <input id="a_b3_file" type="file" accept="image/*">
+          </div>
+        </div>
+        <div class="row"><label>PDF (URL)</label><input id="a_b3_pdf" type="text" placeholder="https://.../arquivo.pdf"></div>
+        <div class="row"><label>Vídeo (URL)</label><input id="a_b3_video" type="text" placeholder="https://.../video.mp4 ou YouTube/Vimeo"></div>
+        <div class="row"><label>Link (URL)</label><input id="a_b3_link" type="text" placeholder="https://..."></div>
+      </div>
+    </div>
+
+    <!-- Produto B -->
+    <div class="card">
+      <h3>Produto B</h3>
+      <div class="row"><label>Rótulo</label><input id="b_rotulo" type="text" placeholder="Produto B"></div>
+      <div class="row"><label>Título</label><input id="b_titulo" type="text" placeholder="Lista com Contatos Extras"></div>
+      <div class="row"><label>Preço</label><input id="b_preco" type="text" placeholder="R$ 29,90"></div>
+
+      <div class="row">
+        <label>Capa (URL)</label>
+        <div class="flex">
+          <input id="b_cover" type="text" placeholder="https://..." />
+          <input id="b_cover_file" type="file" accept="image/*">
+        </div>
+      </div>
+      <div class="row"><label>Preview</label><img id="b_cover_img" class="thumb" alt="Preview B" width="80" height="80"></div>
+
+      <div class="row">
+        <label>Checkout URL</label>
+        <input id="b_checkout" type="text" placeholder="/mp/checkout?product=B&orderId={ORDER_ID}">
+      </div>
+
+      <div class="sub">
+        <h4>Entrega pós-pagamento</h4>
+        <div class="row"><label>PDF (URL)</label><input id="b_pdf" type="text" placeholder="https://.../arquivo.pdf"></div>
+        <div class="row"><label>Vídeo (URL)</label><input id="b_video" type="text" placeholder="https://.../video.mp4 ou YouTube/Vimeo"></div>
+        <div class="row"><label>Link (URL)</label><input id="b_link" type="text" placeholder="https://... (área de membros/drive/etc.)"></div>
+        <div class="muted">Esses links serão enviados automaticamente ao cliente após o pagamento aprovado.</div>
+      </div>
+
+      <div class="bump">
+        <strong>Bump #1</strong>
+        <div class="row"><label>Título</label><input id="b_b1_tit" type="text"></div>
+        <div class="row"><label>Preço</label><input id="b_b1_pre" type="text"></div>
+        <div class="row"><label>Imagem (URL)</label>
+          <div class="flex">
+            <input id="b_b1_img" type="text" placeholder="https://...">
+            <input id="b_b1_file" type="file" accept="image/*">
+          </div>
+        </div>
+        <div class="row"><label>PDF (URL)</label><input id="b_b1_pdf" type="text" placeholder="https://.../arquivo.pdf"></div>
+        <div class="row"><label>Vídeo (URL)</label><input id="b_b1_video" type="text" placeholder="https://.../video.mp4 ou YouTube/Vimeo"></div>
+        <div class="row"><label>Link (URL)</label><input id="b_b1_link" type="text" placeholder="https://..."></div>
+      </div>
+
+      <div class="bump">
+        <strong>Bump #2</strong>
+        <div class="row"><label>Título</label><input id="b_b2_tit" type="text"></div>
+        <div class="row"><label>Preço</label><input id="b_b2_pre" type="text"></div>
+        <div class="row"><label>Imagem (URL)</label>
+          <div class="flex">
+            <input id="b_b2_img" type="text" placeholder="https://...">
+            <input id="b_b2_file" type="file" accept="image/*">
+          </div>
+        </div>
+        <div class="row"><label>PDF (URL)</label><input id="b_b2_pdf" type="text" placeholder="https://.../arquivo.pdf"></div>
+        <div class="row"><label>Vídeo (URL)</label><input id="b_b2_video" type="text" placeholder="https://.../video.mp4 ou YouTube/Vimeo"></div>
+        <div class="row"><label>Link (URL)</label><input id="b_b2_link" type="text" placeholder="https://..."></div>
+      </div>
+
+      <div class="bump">
+        <strong>Bump #3</strong>
+        <div class="row"><label>Título</label><input id="b_b3_tit" type="text"></div>
+        <div class="row"><label>Preço</label><input id="b_b3_pre" type="text"></div>
+        <div class="row"><label>Imagem (URL)</label>
+          <div class="flex">
+            <input id="b_b3_img" type="text" placeholder="https://...">
+            <input id="b_b3_file" type="file" accept="image/*">
+          </div>
+        </div>
+        <div class="row"><label>PDF (URL)</label><input id="b_b3_pdf" type="text" placeholder="https://.../arquivo.pdf"></div>
+        <div class="row"><label>Vídeo (URL)</label><input id="b_b3_video" type="text" placeholder="https://.../video.mp4 ou YouTube/Vimeo"></div>
+        <div class="row"><label>Link (URL)</label><input id="b_b3_link" type="text" placeholder="https://..."></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <button id="saveBtn" class="btn btn-primary">Salvar</button>
+    <span id="msg" class="muted"></span>
+  </div>
+</div>
+
+<script>
+  // ====== helpers ======
+  const PLACEHOLDER_COVER = '/assets/placeholder-cover.jpg';
+  const $ = (id)=>document.getElementById(id);
+  const debounce = (fn, wait=250)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), wait); }; };
+
+  function safeResolve(u){
+    try { return u ? new URL(u, location.origin).href : ''; }
+    catch { return ''; }
+  }
+
+  function setImgSafe(imgEl, url, fallback=PLACEHOLDER_COVER){
+    const target = safeResolve(url) || fallback;
+    if (imgEl.getAttribute('src') !== target) imgEl.setAttribute('src', target);
+    imgEl.onerror = () => { imgEl.onerror = null; imgEl.src = fallback; };
+  }
+
+  // Converte URLs do próprio servidor para caminho relativo /uploads/...
+  function toRelativeUploads(u){
+    let s = (u||'').trim();
+    if (!s) return s;
+    if (s.startsWith('/uploads/')) return s;
+    // http(s)://qualquer-host/uploads/arquivo -> /uploads/arquivo
+    const m = s.match(/^https?:\/\/[^\/]+(\/uploads\/.+)$/i);
+    if (m) return m[1];
+    // também cobre http://localhost:3000/uploads/...
+    return s;
+  }
+
+  // Atualiza preview quando usuário digita a URL
+  function bindPreview(urlInputId, imgId){
+    const i = $(urlInputId), im = $(imgId);
+    if (!i || !im) return;
+    const update = ()=> setImgSafe(im, i.value);
+    i.addEventListener('input', debounce(update, 250));
+    update();
+  }
+
+  // Upload de arquivo + preview imediato
+  async function uploadFile(input, targetInputUrl, previewImg){
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    // preview local imediato
+    if (previewImg) {
+      const localUrl = URL.createObjectURL(file);
+      $(previewImg).src = localUrl;
+    }
+    // envia pro backend
+    const fd = new FormData(); fd.append('file', file);
+    try{
+      const r = await fetch('/upload', { method:'POST', body: fd });
+      const j = await r.json();
+      if (j.ok && j.url) {
+        // salva SEMPRE relativo
+        $(targetInputUrl).value = j.url;
+        // preview com absolute_url, se existir
+        if (previewImg) setImgSafe($(previewImg), j.absolute_url || j.url);
+      } else {
+        if (previewImg) setImgSafe($(previewImg), '', PLACEHOLDER_COVER);
+        alert('Falha no upload');
+      }
+    }catch(e){
+      if (previewImg) setImgSafe($(previewImg), '', PLACEHOLDER_COVER);
+      alert('Erro de rede no upload');
+    }
+  }
+
+  async function load(){
+    const r = await fetch('/config', {cache:'no-store'}); const CFG = await r.json();
+
+    // globais
+    $('whats').value = CFG.whatsapp_suporte || '';
+    $('saudacao').value = CFG.saudacao || '';
+
+    // Produto A
+    const A = CFG.produtoA || {};
+    $('a_rotulo').value = A.rotulo || '';
+    $('a_titulo').value = A.titulo || '';
+    $('a_preco').value  = A.preco  || '';
+    $('a_cover').value  = A.cover_url || '';
+    setImgSafe($('a_cover_img'), $('a_cover').value);
+    $('a_checkout').value = A.checkout_url || '';
+
+    const Ab = Array.isArray(A.bumps) ? A.bumps : [];
+    const gA = (i,k)=> (Ab[i] && Ab[i][k]) || '';
+    $('a_b1_tit').value=gA(0,'titulo'); $('a_b1_pre').value=gA(0,'preco'); $('a_b1_img').value=gA(0,'img_url');
+    $('a_b2_tit').value=gA(1,'titulo'); $('a_b2_pre').value=gA(1,'preco'); $('a_b2_img').value=gA(1,'img_url');
+    $('a_b3_tit').value=gA(2,'titulo'); $('a_b3_pre').value=gA(2,'preco'); $('a_b3_img').value=gA(2,'img_url');
+
+    const EA = A.entrega || {};
+    $('a_pdf').value   = EA.pdf_url   || '';
+    $('a_video').value = EA.video_url || '';
+    $('a_link').value  = EA.link_url  || '';
+    $('a_b1_pdf').value = gA(0,'pdf_url'); $('a_b1_video').value = gA(0,'video_url'); $('a_b1_link').value = gA(0,'link_url');
+    $('a_b2_pdf').value = gA(1,'pdf_url'); $('a_b2_video').value = gA(1,'video_url'); $('a_b2_link').value = gA(1,'link_url');
+    $('a_b3_pdf').value = gA(2,'pdf_url'); $('a_b3_video').value = gA(2,'video_url'); $('a_b3_link').value = gA(2,'link_url');
+
+    // Produto B
+    const B = CFG.produtoB || {};
+    $('b_rotulo').value = B.rotulo || '';
+    $('b_titulo').value = B.titulo || '';
+    $('b_preco').value  = B.preco  || '';
+    $('b_cover').value  = B.cover_url || '';
+    setImgSafe($('b_cover_img'), $('b_cover').value);
+    $('b_checkout').value = B.checkout_url || '';
+
+    const Bb = Array.isArray(B.bumps) ? B.bumps : [];
+    const gB = (i,k)=> (Bb[i] && Bb[i][k]) || '';
+    $('b_b1_tit').value=gB(0,'titulo'); $('b_b1_pre').value=gB(0,'preco'); $('b_b1_img').value=gB(0,'img_url');
+    $('b_b2_tit').value=gB(1,'titulo'); $('b_b2_pre').value=gB(1,'preco'); $('b_b2_img').value=gB(1,'img_url');
+    $('b_b3_tit').value=gB(2,'titulo'); $('b_b3_pre').value=gB(2,'preco'); $('b_b3_img').value=gB(2,'img_url');
+
+    const EB = B.entrega || {};
+    $('b_pdf').value   = EB.pdf_url   || '';
+    $('b_video').value = EB.video_url || '';
+    $('b_link').value  = EB.link_url  || '';
+    $('b_b1_pdf').value = gB(0,'pdf_url'); $('b_b1_video').value = gB(0,'video_url'); $('b_b1_link').value = gB(0,'link_url');
+    $('b_b2_pdf').value = gB(1,'pdf_url'); $('b_b2_video').value = gB(1,'video_url'); $('b_b2_link').value = gB(1,'link_url');
+    $('b_b3_pdf').value = gB(2,'pdf_url'); $('b_b3_video').value = gB(2,'video_url'); $('b_b3_link').value = gB(2,'link_url');
+
+    // Bind de preview ao digitar URL
+    bindPreview('a_cover','a_cover_img');
+    bindPreview('b_cover','b_cover_img');
+
+    // uploads (capas)
+    $('a_cover_file').onchange = ()=>uploadFile($('a_cover_file'),'a_cover','a_cover_img');
+    $('b_cover_file').onchange = ()=>uploadFile($('b_cover_file'),'b_cover','b_cover_img');
+
+    // uploads (bumps) — mantém só o valor relativo no input
+    $('a_b1_file').onchange = ()=>uploadFile($('a_b1_file'),'a_b1_img',null);
+    $('a_b2_file').onchange = ()=>uploadFile($('a_b2_file'),'a_b2_img',null);
+    $('a_b3_file').onchange = ()=>uploadFile($('a_b3_file'),'a_b3_img',null);
+    $('b_b1_file').onchange = ()=>uploadFile($('b_b1_file'),'b_b1_img',null);
+    $('b_b2_file').onchange = ()=>uploadFile($('b_b2_file'),'b_b2_img',null);
+    $('b_b3_file').onchange = ()=>uploadFile($('b_b3_file'),'b_b3_img',null);
+
+    $('saveBtn').onclick = save;
+  }
+
+  async function save(){
+    // normaliza antes de enviar
+    const a_cover_rel = toRelativeUploads($('a_cover').value);
+    const b_cover_rel = toRelativeUploads($('b_cover').value);
+
+    const payload = {
+      whatsapp_suporte: $('whats').value.trim(),
+      saudacao: $('saudacao').value,
+      produtoA: {
+        rotulo: $('a_rotulo').value, titulo: $('a_titulo').value, preco: $('a_preco').value,
+        cover_url: a_cover_rel, checkout_url: $('a_checkout').value,
+        entrega: {
+          pdf_url:   $('a_pdf').value.trim(),
+          video_url: $('a_video').value.trim(),
+          link_url:  $('a_link').value.trim()
+        },
+        bumps: [
+          { id:'b1', titulo:$('a_b1_tit').value, preco:$('a_b1_pre').value, img_url:toRelativeUploads($('a_b1_img').value),
+            pdf_url:$('a_b1_pdf').value, video_url:$('a_b1_video').value, link_url:$('a_b1_link').value },
+          { id:'b2', titulo:$('a_b2_tit').value, preco:$('a_b2_pre').value, img_url:toRelativeUploads($('a_b2_img').value),
+            pdf_url:$('a_b2_pdf').value, video_url:$('a_b2_video').value, link_url:$('a_b2_link').value },
+          { id:'b3', titulo:$('a_b3_tit').value, preco:$('a_b3_pre').value, img_url:toRelativeUploads($('a_b3_img').value),
+            pdf_url:$('a_b3_pdf').value, video_url:$('a_b3_video').value, link_url:$('a_b3_link').value },
+        ].filter(b=>b.titulo||b.preco||b.img_url||b.pdf_url||b.video_url||b.link_url)
+      },
+      produtoB: {
+        rotulo: $('b_rotulo').value, titulo: $('b_titulo').value, preco: $('b_preco').value,
+        cover_url: b_cover_rel, checkout_url: $('b_checkout').value,
+        entrega: {
+          pdf_url:   $('b_pdf').value.trim(),
+          video_url: $('b_video').value.trim(),
+          link_url:  $('b_link').value.trim()
+        },
+        bumps: [
+          { id:'b1', titulo:$('b_b1_tit').value, preco:$('b_b1_pre').value, img_url:toRelativeUploads($('b_b1_img').value),
+            pdf_url:$('b_b1_pdf').value, video_url:$('b_b1_video').value, link_url:$('b_b1_link').value },
+          { id:'b2', titulo:$('b_b2_tit').value, preco:$('b_b2_pre').value, img_url:toRelativeUploads($('b_b2_img').value),
+            pdf_url:$('b_b2_pdf').value, video_url:$('b_b2_video').value, link_url:$('b_b2_link').value },
+          { id:'b3', titulo:$('b_b3_tit').value, preco:$('b_b3_pre').value, img_url:toRelativeUploads($('b_b3_img').value),
+            pdf_url:$('b_b3_pdf').value, video_url:$('b_b3_video').value, link_url:$('b_b3_link').value },
+        ].filter(b=>b.titulo||b.preco||b.img_url||b.pdf_url||b.video_url||b.link_url)
+      }
+    };
+
+    const r = await fetch('/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+    $('msg').textContent = j.ok ? 'salvo ✓' : 'erro ao salvar';
+    setTimeout(()=> $('msg').textContent = '', 2000);
+  }
+
+  load().catch(e=>{ console.error(e); alert('Falha ao carregar dados');});
+</script>
+</body>
+</html>

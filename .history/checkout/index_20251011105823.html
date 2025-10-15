@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Checkout</title>
+  <style>
+    :root{--bg:#0b0c10;--card:#16181d;--muted:#8b93a1;--txt:#e9edf1;--acc:#22c55e;--bd:#232730;}
+    *{box-sizing:border-box}
+    body{margin:0;font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--txt)}
+    .wrap{max-width:980px;margin:32px auto;padding:0 16px}
+    .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab{border:1px solid var(--bd);background:#0f1115;color:var(--txt);padding:8px 12px;border-radius:10px;cursor:pointer}
+    .tab.active{background:var(--acc);color:#092b14;font-weight:700;border-color:#15803d}
+    .grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+    .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px}
+    .img{width:100%;height:280px;border-radius:12px;object-fit:cover;border:1px solid var(--bd);background:#0f1115}
+    h1{font-size:22px;margin:0}
+    h2{font-size:16px;margin:0 0 10px}
+    .muted{color:var(--muted);font-size:12px}
+    .price{font-size:22px;font-weight:800}
+    .row{display:flex;justify-content:space-between;align-items:center;margin:8px 0}
+    .total{font-size:18px;font-weight:800}
+    .btn{appearance:none;border:0;border-radius:12px;padding:12px 16px;cursor:pointer;font-weight:700;width:100%}
+    .btn-buy{background:var(--acc);color:#062a12}
+    .badge{display:inline-flex;gap:6px;align-items:center;background:#0f1115;border:1px solid var(--bd);padding:6px 10px;border-radius:999px;color:#d1d7e0}
+    .list{margin:10px 0 0;padding:0 0 0 18px;color:#cfd5de}
+    @media (max-width:880px){.grid{grid-template-columns:1fr}}
+
+    /* order bumps com imagem */
+    .bump{display:flex;gap:10px;align-items:flex-start;border:1px dashed #2b313b;padding:10px;border-radius:10px;margin-bottom:10px;background:#0f1115}
+    .bump input{margin-top:2px}
+    .bump-img{width:56px;height:56px;border-radius:10px;object-fit:cover;border:1px solid var(--bd);background:#0f1115}
+    .bump-body{display:flex;flex-direction:column;gap:2px}
+
+    .backdash {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 9999;
+      background: #22c55e;
+      color: #062a12;
+      font: 600 14px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      padding: 10px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      box-shadow: 0 6px 18px rgba(0,0,0,.35);
+      border: 0;
+      transition: transform .06s ease, filter .2s ease;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .backdash:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    .backdash:active { transform: translateY(0); }
+    .backdash svg { width: 16px; height: 16px; }
+
+    /* ===== Estilo das opções com ícone ===== */
+    .payopt{display:inline-flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #333;border-radius:10px;background:#101217;cursor:pointer}
+    .payopt input{accent-color:#22c55e}
+    .payopt .ico{display:inline-flex;line-height:0}
+    .payopt .ico svg{width:20px;height:20px;display:block}
+    .payopt.pix .ico{color:#22c55e}
+    .payopt.card .ico{color:#60a5fa}
+    .payopt.boleto .ico{color:#eab308}
+    #payResult img{max-width:220px;border:1px solid #333;border-radius:10px}
+    #payResult pre{white-space:pre-wrap;word-break:break-all;background:#0b0c10;border:1px dashed #333;padding:8px;border-radius:8px}
+  </style>
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+</head>
+<body>
+
+  <a href="/admin/dashboard.html" class="backdash" title="Voltar ao Dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M15 18l-6-6 6-6"/>
+    </svg>
+    Dashboard
+  </a>
+
+  <div class="wrap">
+    <div class="head">
+      <h1>Checkout</h1>
+      <span class="badge" id="supportBadge">Suporte</span>
+    </div>
+
+    <div class="tabs" id="tabs"></div>
+
+    <div class="grid">
+      <!-- COL ESQ: produto -->
+      <div class="card">
+        <img id="cover" class="img" alt="Capa do produto" />
+        <h2 id="title" style="margin-top:12px"></h2>
+        <div class="muted">Resumo da oferta</div>
+        <ul class="list" id="summaryList">
+          <li>Entrega imediata após pagamento</li>
+          <li>Acesso vitalício</li>
+          <li>Atualizações quando disponíveis</li>
+        </ul>
+
+        <div style="height:12px"></div>
+        <h2>Adicionais (Order Bumps)</h2>
+        <div id="bumps"></div>
+      </div>
+
+      <!-- COL DIR: preço + comprar -->
+      <div class="card">
+        <div class="row">
+          <div class="muted">Preço base</div>
+          <div id="basePrice" class="price">R$ 0,00</div>
+        </div>
+
+        <div id="bumpLines"></div>
+
+        <div class="row" style="border-top:1px solid var(--bd);padding-top:10px;margin-top:12px">
+          <div class="total">Total</div>
+          <div id="total" class="total">R$ 0,00</div>
+        </div>
+
+        <div style="height:12px"></div>
+        <button class="btn btn-buy" id="buyBtn">Comprar</button>
+        <div class="muted" style="margin-top:8px">Pagamento seguro. Você será redirecionado para o provedor.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ------- helpers -------
+  const parseBRL = (s='')=>{
+    s = (s+'').replace(/\s/g,'').replace(/[R$\s]/gi,'').replace(/\./g,'').replace(',', '.');
+    const n = Number(s);
+    return isFinite(n) ? n : 0;
+  };
+  const fmtBRL = (n)=> n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  const makeOrderId = ()=> 'ORD-' + Date.now().toString(36).toUpperCase().slice(-6);
+  const el= (id)=>document.getElementById(id);
+
+  // ------- estado -------
+  let CONFIG=null;
+  let cur='A'; // produto selecionado
+  let CURRENT_ORDER_ID=null; // usado quando o usuário abre as opções de pagamento
+
+  async function loadConfig(){
+    const q = new URLSearchParams(location.search);
+    const p = (q.get('product') || 'A').toUpperCase();
+    cur = (p === 'B') ? 'B' : 'A';
+
+    const r = await fetch('/config',{cache:'no-store'});
+    CONFIG = await r.json();
+
+    const tabs = el('tabs');
+    const aLabel = CONFIG?.produtoA?.rotulo || 'Produto A';
+    const bLabel = CONFIG?.produtoB?.rotulo || 'Produto B';
+    tabs.innerHTML = `
+      <button class="tab" data-k="A">${aLabel}</button>
+      <button class="tab" data-k="B">${bLabel}</button>
+    `;
+    [...tabs.children].forEach(x => x.classList.toggle('active', x.dataset.k === cur));
+
+    tabs.onclick = (ev)=>{
+      const b = ev.target.closest('.tab'); if(!b) return;
+      cur = b.dataset.k;
+      [...tabs.children].forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      renderProduct();
+    };
+
+    el('supportBadge').textContent = (CONFIG.whatsapp_suporte || 'Suporte');
+    renderProduct();
+  }
+
+  function getProd(){ return cur==='A' ? (CONFIG?.produtoA || {}) : (CONFIG?.produtoB || {}); }
+
+  function renderProduct(){
+    const p = getProd();
+
+    el('cover').src = p.cover_url || '';
+    el('title').textContent = p.titulo || `Produto ${cur}`;
+    el('basePrice').textContent = p.preco || 'R$ 0,00';
+
+    const host = el('bumps');
+    host.innerHTML = '';
+    const lines = el('bumpLines');
+    lines.innerHTML = '';
+
+    const bumps = Array.isArray(p.bumps) ? p.bumps.slice(0,3) : [];
+    bumps.forEach(b=>{
+      const id = `bump_${b.id || Math.random().toString(36).slice(2)}`;
+      const row = document.createElement('label');
+      row.className = 'bump';
+      row.innerHTML = `
+        <input type="checkbox" id="${id}" data-id="${b.id || id}" data-preco="${b.preco||''}">
+        ${b.img_url ? `<img class="bump-img" src="${b.img_url}" alt="">` : ''}
+        <div class="bump-body">
+          <div><strong>${b.titulo || 'Adicional'}</strong></div>
+          <div class="muted">${b.preco || ''}</div>
+        </div>
+      `;
+      host.appendChild(row);
+    });
+
+    calcTotal();
+    host.onchange = ()=>{
+      calcTotal();
+      updatePayPanelTotal();
+    };
+
+    const btn = el('buyBtn');
+    if (btn) btn.onclick = onBuy;
+
+    ensurePayPanel(); // mantém as rotas e endpoints originais
+  }
+
+  function computeTotal(){
+    const p = getProd();
+    let total = parseBRL(p.preco || '0');
+    const bumps = Array.from(el('bumps').querySelectorAll('input[type=checkbox]'));
+    bumps.forEach(chk=>{ if(chk.checked){ total += parseBRL(chk.dataset.preco||'0'); } });
+    return total;
+  }
+
+  function calcTotal(){ el('total').textContent = fmtBRL(computeTotal()); }
+
+  // ===================== ÁREA DE PAGAMENTO EMBUTIDA =====================
+  function ensurePayPanel(){
+    if (document.getElementById('payPanel')) return;
+
+    const panel = document.createElement('div');
+    panel.id = 'payPanel';
+    panel.style.marginTop = '16px';
+    panel.style.padding = '12px';
+    panel.style.border = '1px solid var(--bd, #232730)';
+    panel.style.borderRadius = '12px';
+    panel.style.background = '#0f1115';
+    panel.style.display = 'none';
+
+    /* Ícones SVG inline nas opções (Pix / Cartão / Boleto) */
+    panel.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <strong>Escolha como deseja pagar</strong>
+        <div class="muted">Total: <span id="payPanelTotal">–</span></div>
+      </div>
+
+      <label class="payopt pix">
+  <input type="radio" name="paymethod" value="pix" checked>
+  <span class="ico" aria-hidden="true">
+    <!-- losango PIX -->
+    <svg viewBox="0 0 24 24"><path d="M12 2.5 21.5 12 12 21.5 2.5 12 12 2.5z" fill="currentColor" opacity=".18"/><path d="M7.8 12 12 7.8 16.2 12 12 16.2 7.8 12z" fill="currentColor"/></svg>
+  </span>
+  <span>Pix (recomendado)</span>
+</label>
+
+
+        <label class="payopt card">
+          <input type="radio" name="paymethod" value="card">
+          <span class="ico" aria-hidden="true">
+            <!-- cartão -->
+            <svg viewBox="0 0 24 24">
+              <rect x="2" y="5" width="20" height="14" rx="2" fill="currentColor" opacity=".18"/>
+              <rect x="2" y="8" width="20" height="3" fill="currentColor"/>
+              <rect x="5" y="14" width="6" height="2" fill="currentColor"/>
+            </svg>
+          </span>
+          <span>Cartão</span>
+        </label>
+
+        <label class="payopt boleto">
+          <input type="radio" name="paymethod" value="boleto">
+          <span class="ico" aria-hidden="true">
+            <!-- boleto/código de barras -->
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="6" width="18" height="12" rx="1.5" fill="currentColor" opacity=".18"/>
+              <g fill="currentColor">
+                <rect x="6" y="9" width="1" height="6"/>
+                <rect x="8" y="9" width="2" height="6"/>
+                <rect x="11" y="9" width="1" height="6"/>
+                <rect x="13" y="9" width="2" height="6"/>
+                <rect x="16" y="9" width="1" height="6"/>
+              </g>
+            </svg>
+          </span>
+          <span>Boleto</span>
+        </label>
+      </div>
+
+      <div id="payResult" class="muted" style="margin:8px 0 12px 0;"></div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="btnPayNow" style="padding:10px 14px;border:0;border-radius:10px;background:#22c55e;color:#062a12;cursor:pointer;">Finalizar pagamento</button>
+        <button id="btnPayClose" style="padding:10px 14px;border:1px solid #333;border-radius:10px;background:#101217;color:#e9edf1;cursor:pointer;">Cancelar</button>
+        <button id="btnGoMP" title="Abrir no Mercado Pago (fallback)" style="padding:10px 14px;border:1px solid #333;border-radius:10px;background:#101217;color:#e9edf1;cursor:pointer;">Pagar no Mercado Pago</button>
+      </div>
+    `;
+
+    const anchor = document.getElementById('bumps');
+    anchor.parentElement.appendChild(panel);
+
+    panel.querySelector('#btnPayNow').onclick = doProcessPayment;
+    panel.querySelector('#btnPayClose').onclick = () => togglePayPanel(false);
+    panel.querySelector('#btnGoMP').onclick = () => {
+      const url = buildRedirectUrl(CURRENT_ORDER_ID || makeOrderId());
+      window.location.href = url;
+    };
+  }
+
+  function togglePayPanel(show){
+    const p = document.getElementById('payPanel');
+    if (!p) return;
+    p.style.display = show ? 'block' : 'none';
+    if (show) updatePayPanelTotal();
+    if (!show) document.getElementById('payResult').innerHTML = '';
+  }
+
+  function updatePayPanelTotal(){
+    const t = computeTotal();
+    const elT = document.getElementById('payPanelTotal');
+    if (elT) elT.textContent = fmtBRL(t);
+  }
+
+  function getChosenMethod(){
+    const r = document.querySelector('input[name="paymethod"]:checked');
+    return r ? r.value : 'pix';
+  }
+
+  async function doProcessPayment(){
+    const orderId = CURRENT_ORDER_ID || makeOrderId();
+    const productKey = cur;
+    const method = getChosenMethod();
+
+    const bumps = Array.from(el('bumps').querySelectorAll('input[type=checkbox]'));
+    const flags = {};
+    bumps.forEach(chk => { flags[chk.dataset.id] = !!chk.checked; });
+
+    const body = { orderId, productKey, method, bumps: flags };
+
+    const out = document.getElementById('payResult');
+    out.innerHTML = 'Processando…';
+
+    try {
+      const r = await fetch('/mp/process-payment', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+      });
+      const j = await r.json();
+
+      if (!j?.ok) {
+        out.innerHTML = `<span style="color:#f87171">Falha: ${j?.error || 'erro desconhecido'}</span>`;
+        return;
+      }
+
+      if (j.method === 'pix' && j.pix) {
+        const { qr_base64, copia_e_cola } = j.pix;
+        out.innerHTML = `
+          <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+            ${qr_base64 ? `<img src="data:image/png;base64,${qr_base64}" alt="QR Pix">` : ''}
+            <div>
+              <div class="muted" style="margin-bottom:6px">Código copia-e-cola:</div>
+              <pre id="pixCode">${copia_e_cola || ''}</pre>
+              <button id="copyPix" style="margin-top:6px;padding:8px 12px;border:0;border-radius:8px;background:#22c55e;color:#062a12;cursor:pointer">Copiar código</button>
+            </div>
+          </div>
+        `;
+        const b = document.getElementById('copyPix');
+        if (b) b.onclick = async ()=>{ try { await navigator.clipboard.writeText(copia_e_cola || ''); b.textContent='Copiado!'; setTimeout(()=>b.textContent='Copiar código', 1500); } catch{} };
+      } else if (j.method === 'boleto' && j.boleto) {
+        const url = j.boleto.external_resource_url || j.boleto.url;
+        out.innerHTML = `Boleto gerado. <a href="${url}" target="_blank" rel="noopener">Abrir boleto</a>.`;
+      } else if (j.method === 'card') {
+        out.innerHTML = 'Abrindo checkout de cartão…';
+        setTimeout(()=>{ window.location.href = buildRedirectUrl(orderId); }, 300);
+      } else {
+        out.innerHTML = 'Pagamento criado.';
+      }
+    } catch(e){
+      out.innerHTML = `<span style="color:#f87171">Erro de rede: ${e.message}</span>`;
+    }
+  }
+  // =================== FIM DA ÁREA DE PAGAMENTO ===================
+
+  function buildRedirectUrl(orderId){
+    let url = `/mp/checkout?product=${cur}&orderId=${orderId}`;
+    const bumps = Array.from(el('bumps').querySelectorAll('input[type=checkbox]'));
+    const params = new URLSearchParams();
+    bumps.forEach(chk => params.set(chk.dataset.id, chk.checked ? '1' : '0'));
+    const glue = url.includes('?') ? '&' : '?';
+    url = url + glue + params.toString();
+    return url;
+  }
+
+  function onBuy(){
+    const orderId = makeOrderId();
+    CURRENT_ORDER_ID = orderId;
+
+    const payload = { orderId, productKey: cur };
+    try {
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/analytics/checkout-click', new Blob([JSON.stringify(payload)], { type:'application/json' }));
+      } else {
+        fetch('/analytics/checkout-click', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(payload), keepalive: true
+        }).catch(()=>{});
+      }
+    } catch(e) {}
+
+    togglePayPanel(true);
+    // Para voltar ao redirecionamento direto, descomente:
+    // window.location.href = buildRedirectUrl(orderId);
+  }
+
+  loadConfig().catch(err=>{ console.error(err); alert('Falha ao carregar configurações.'); });
+  </script>
+
+</body>
+</html>

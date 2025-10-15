@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Dashboard — Hiveloja</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Plugin para rótulos (percentuais) nas barras -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <style>
+    :root{
+      --bg:#0b0c10; --card:#16181d; --muted:#8b93a1; --txt:#e9edf1; --acc:#22c55e; --bd:#232730;
+      /* paleta viva */
+      --c1:#3b82f6;  /* azul */
+      --c2:#a855f7;  /* roxo */
+      --c3:#22c55e;  /* verde */
+      --c4:#f59e0b;  /* âmbar (extra para série, se precisar) */
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--txt)}
+    .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+    h1{font-size:22px;margin:0 0 12px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .menu a{display:inline-block;margin-right:8px;padding:8px 12px;border:1px solid var(--bd);border-radius:10px;background:#101217;color:var(--txt);text-decoration:none}
+    .menu a.primary{background:var(--acc);color:#062a12;border-color:transparent}
+    .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin:14px 0}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .kpi{background:#101217;border:1px solid var(--bd);border-radius:12px;padding:12px}
+    .kpi h3{font-size:12px;margin:0;color:#cdd3dc}
+    .kpi .v{font-size:26px;font-weight:700;margin-top:6px}
+    label{color:#cdd3dc;margin-right:8px}
+    input[type=date]{background:#101217;color:var(--txt);border:1px solid var(--bd);border-radius:8px;padding:6px 8px}
+    .muted{color:var(--muted);font-size:12px}
+    canvas{background:#0f1115;border:1px solid var(--bd);border-radius:12px;padding:8px}
+    @media (max-width:900px){.kpis{grid-template-columns:1fr 1fr}}
+    @media (max-width:560px){.kpis{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Dashboard</h1>
+
+    <div class="menu card">
+      <strong>Acessos</strong> ·
+      <a href="/admin/index.html">Config bot</a>
+      <a href="/admin/editar-checkout.html">Editar Checkout</a>
+      <a class="primary" href="/checkout/">Abrir Checkout</a>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <label>Período:</label>
+          <input id="from" type="date"> —
+          <input id="to" type="date">
+          <button id="apply" style="margin-left:8px;padding:6px 10px;border:0;border-radius:8px;background:var(--acc);color:#062a12;cursor:pointer;">Aplicar</button>
+        </div>
+        <div class="muted">As métricas são agregadas localmente (arquivos *.json do projeto).</div>
+      </div>
+
+      <div class="kpis" style="margin-top:12px">
+        <div class="kpi">
+          <h3>Cliques no checkout</h3>
+          <div id="k_checkout_clicks" class="v">–</div>
+        </div>
+        <div class="kpi">
+          <h3>Contatos que enviaram msg</h3>
+          <div id="k_leads_msg" class="v">–</div>
+        </div>
+        <div class="kpi">
+          <h3>Compras aprovadas</h3>
+          <div id="k_sales" class="v">–</div>
+        </div>
+        <div class="kpi">
+          <h3>Receita (R$)</h3>
+          <div id="k_revenue" class="v">–</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Funil (visão geral)</h3>
+      <div class="muted">De <b>Mensagens recebidas</b> → <b>Cliques no checkout</b> → <b>Compras concluídas</b>.</div>
+      <canvas id="funnel" height="220"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Série diária</h3>
+      <canvas id="series" height="240"></canvas>
+    </div>
+
+    <!-- NOVO: Pagamentos por meio -->
+    <div class="card">
+      <h3>Pagamentos por meio</h3>
+      <div class="muted">Distribuição por quantidade e por valor (R$): PIX, Boleto e Cartão.</div>
+      <div class="row" style="gap:16px;align-items:flex-start;flex-wrap:wrap;margin-top:8px">
+        <div style="flex:1;min-width:260px">
+          <h4 style="margin:8px 0 6px">Por quantidade</h4>
+          <canvas id="pay_count" height="220"></canvas>
+        </div>
+        <div style="flex:1;min-width:260px">
+          <h4 style="margin:8px 0 6px">Por valor (R$)</h4>
+          <canvas id="pay_amount" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = sel => document.querySelector(sel);
+
+    // registra o plugin de datalabels (se disponível)
+    if (window.ChartDataLabels) {
+      Chart.register(ChartDataLabels);
+    }
+
+    // ====== Tema escuro para os gráficos (grades, rótulos, etc.)
+    Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim();
+    Chart.defaults.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--bd').trim();
+    Chart.defaults.font.family = 'system-ui,-apple-system,Segoe UI,Roboto,Arial';
+
+    // datas padrão (últimos 7 dias)
+    (() => {
+      const to = new Date();
+      const from = new Date(Date.now() - 6*24*3600*1000);
+      $('#to').value = to.toISOString().slice(0,10);
+      $('#from').value = from.toISOString().slice(0,10);
+    })();
+
+    let funnelChart, seriesChart, payCountChart, payAmountChart;
+
+    async function loadStats(){
+      const qs = new URLSearchParams({ from: $('#from').value, to: $('#to').value }).toString();
+      const r = await fetch('/analytics/stats?'+qs);
+      const j = await r.json();
+
+      // KPIs
+      $('#k_checkout_clicks').textContent = j.totals.checkout_clicks ?? 0;
+      $('#k_leads_msg').textContent = j.totals.unique_msg_in ?? 0;
+      $('#k_sales').textContent = j.totals.sales_count ?? 0;
+      $('#k_revenue').textContent = ((j.totals.revenue || 0).toFixed(2)).replace('.',',');
+
+      // ==================== FUNIL ====================
+      const funnelLabels = ['Msgs recebidas', 'Cliques', 'Compras'];
+      const funnelData   = [j.totals.unique_msg_in||0, j.totals.checkout_clicks||0, j.totals.sales_count||0];
+      const totalFunnel  = funnelData.reduce((a,b)=>a+b, 0);
+
+      const c1 = getCss('--c1'), c2 = getCss('--c2'), c3 = getCss('--c3'), c4 = getCss('--c4');
+      const barBg = [hexA(c1, .75), hexA(c2, .75), hexA(c3, .75)];
+      const barBd = [c1, c2, c3];
+
+      if (funnelChart) funnelChart.destroy();
+      funnelChart = new Chart($('#funnel'), {
+        type:'bar',
+        data:{
+          labels: funnelLabels,
+          datasets:[{
+            data: funnelData,
+            backgroundColor: barBg,
+            borderColor: barBd,
+            borderWidth: 2,
+            borderRadius: 10
+          }]
+        },
+        options:{
+          plugins:{
+            legend:{ display:false },
+            tooltip:{
+              backgroundColor:'#101217',
+              borderColor:getCss('--bd'),
+              borderWidth:1,
+              callbacks:{
+                label: (tt) => {
+                  const v = tt.raw ?? 0;
+                  const pct = totalFunnel ? ((v/totalFunnel)*100).toFixed(1) : '0.0';
+                  return `${tt.label}: ${v} (${pct}%)`;
+                }
+              }
+            },
+            datalabels:{
+              display: ctx => totalFunnel > 0 && ctx.raw > 0,
+              formatter: (value) => {
+                const pct = (value / (totalFunnel || 1)) * 100;
+                return pct.toFixed(0) + '%';
+              },
+              anchor: 'end',
+              align: 'end',
+              offset: 4,
+              font: { weight:'700', size:12 },
+              color: getCss('--txt')
+            }
+          },
+          scales:{
+            x:{ grid:{ display:false }, ticks:{ color:getCss('--txt') } },
+            y:{ beginAtZero:true, ticks:{ precision:0 } }
+          }
+        }
+      });
+
+      // ==================== SÉRIE DIÁRIA ====================
+      const labels = (j.daily||[]).map(d => d.date);
+      const clicks = (j.daily||[]).map(d => d.checkout_clicks);
+      const msgs   = (j.daily||[]).map(d => d.unique_msg_in);
+      const sales  = (j.daily||[]).map(d => d.sales_count);
+
+      if (seriesChart) seriesChart.destroy();
+      seriesChart = new Chart($('#series'), {
+        type:'line',
+        data: {
+          labels,
+          datasets: [
+            { label:'Msgs',    data: msgs,   borderColor:c1, backgroundColor:hexA(c1,.2), tension:.25, fill:true, pointRadius:2, borderWidth:2 },
+            { label:'Cliques', data: clicks, borderColor:c2, backgroundColor:hexA(c2,.2), tension:.25, fill:true, pointRadius:2, borderWidth:2 },
+            { label:'Vendas',  data: sales,  borderColor:c3, backgroundColor:hexA(c3,.2), tension:.25, fill:true, pointRadius:2, borderWidth:2 }
+          ]
+        },
+        options:{
+          plugins:{
+            legend:{ labels:{ color:getCss('--txt') } },
+            tooltip:{ backgroundColor:'#101217', borderColor:getCss('--bd'), borderWidth:1 }
+          },
+          scales:{
+            x:{ grid:{ color:getCss('--bd') }, ticks:{ color:getCss('--txt') } },
+            y:{ grid:{ color:getCss('--bd') }, ticks:{ precision:0 } }
+          }
+        }
+      });
+
+      // ==================== PAGAMENTOS POR MEIO ====================
+      const methods = (j.payments?.by_method || [])
+        .filter(m => (m.count || 0) > 0 || (m.amount || 0) > 0);
+
+      const labelsPay = methods.map(m => {
+        if (m.method === 'pix')    return 'PIX';
+        if (m.method === 'boleto') return 'Boleto';
+        if (m.method === 'cartao') return 'Cartão';
+        return (m.method || 'Outro').toUpperCase();
+      });
+
+      const counts  = methods.map(m => m.count  || 0);
+      const amounts = methods.map(m => Number(m.amount || 0));
+
+      const totalCount  = counts.reduce((a,b)=>a+b,0);
+      const totalAmount = amounts.reduce((a,b)=>a+b,0);
+
+      const pal   = [c1,c2,c3,c4].slice(0, labelsPay.length).map(hex => hexA(hex, .8));
+      const palBd = [c1,c2,c3,c4].slice(0, labelsPay.length);
+
+      // doughnut: quantidade
+      if (payCountChart) payCountChart.destroy();
+      payCountChart = new Chart($('#pay_count'), {
+        type: 'doughnut',
+        data: {
+          labels: labelsPay,
+          datasets: [{ data: counts, backgroundColor: pal, borderColor: palBd, borderWidth: 2 }]
+        },
+        options: {
+          plugins:{
+            legend:{ labels:{ color:getCss('--txt') } },
+            tooltip:{
+              backgroundColor:'#101217', borderColor:getCss('--bd'), borderWidth:1,
+              callbacks:{
+                label: (tt) => {
+                  const v = tt.raw ?? 0;
+                  const pct = totalCount ? ((v/totalCount)*100).toFixed(1) : '0.0';
+                  return `${tt.label}: ${v} (${pct}%)`;
+                }
+              }
+            },
+            datalabels:{
+              display: ctx => totalCount > 0 && ctx.raw > 0,
+              formatter: (v) => ((v/(totalCount||1))*100).toFixed(0) + '%',
+              color: getCss('--txt'),
+              font: { weight:'700' }
+            }
+          },
+          cutout: '60%'
+        }
+      });
+
+      // doughnut: valor (R$)
+      if (payAmountChart) payAmountChart.destroy();
+      payAmountChart = new Chart($('#pay_amount'), {
+        type: 'doughnut',
+        data: {
+          labels: labelsPay,
+          datasets: [{ data: amounts, backgroundColor: pal, borderColor: palBd, borderWidth: 2 }]
+        },
+        options: {
+          plugins:{
+            legend:{ labels:{ color:getCss('--txt') } },
+            tooltip:{
+              backgroundColor:'#101217', borderColor:getCss('--bd'), borderWidth:1,
+              callbacks:{
+                label: (tt) => {
+                  const v = Number(tt.raw||0);
+                  const pct = totalAmount ? ((v/totalAmount)*100).toFixed(1) : '0.0';
+                  return `${tt.label}: R$ ${v.toFixed(2).replace('.',',')} (${pct}%)`;
+                }
+              }
+            },
+            datalabels:{
+              display: ctx => totalAmount > 0 && ctx.raw > 0,
+              formatter: (v) => ((v/(totalAmount||1))*100).toFixed(0) + '%',
+              color: getCss('--txt'),
+              font: { weight:'700' }
+            }
+          },
+          cutout: '60%'
+        }
+      });
+    }
+
+    // utilitários para pegar cores do CSS e aplicar alpha
+    function getCss(varName){
+      return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+    }
+    function hexA(hex, a){
+      const c = hex.replace('#','');
+      const r = parseInt(c.substring(0,2),16);
+      const g = parseInt(c.substring(2,4),16);
+      const b = parseInt(c.substring(4,6),16);
+      return `rgba(${r},${g},${b},${a})`;
+    }
+
+    $('#apply').onclick = loadStats;
+    loadStats();
+  </script>
+</body>
+</html>

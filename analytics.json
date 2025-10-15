@@ -1,0 +1,1669 @@
+[
+  {
+    "ts": 1760122242860,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760122251310,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760122277071,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760122296865,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760122305756,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760122317381,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760122369616,
+    "type": "checkout_click",
+    "orderId": "ORD-L7EWCS",
+    "productKey": "B"
+  },
+  {
+    "ts": 1760122415032,
+    "type": "checkout_click",
+    "orderId": "ORD-L7FVE4",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760123831933,
+    "type": "checkout_click",
+    "orderId": "ORD-L8A8OQ",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760124013755,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760124111277,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760124118129,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760124156012,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760141230445,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760141300165,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760141405493,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760141502451,
+    "type": "checkout_click",
+    "orderId": "ORD-LISZCH",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760142083995,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760143636584,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760143644949,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760143675779,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760143952502,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760146400300,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760146489882,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760146552658,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760146642237,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760146752863,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760146968501,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760147162453,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760147215573,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760147479671,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760147679424,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760147690773,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760147698470,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760147705982,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760147713153,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760185484749,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760185518105,
+    "type": "checkout_click",
+    "orderId": "ORD-M90E1H",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760185599063,
+    "type": "checkout_click",
+    "orderId": "ORD-M924ID",
+    "productKey": "B"
+  },
+  {
+    "ts": 1760190315188,
+    "type": "checkout_click",
+    "orderId": "ORD-MBV7HA",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760190330295,
+    "type": "checkout_click",
+    "orderId": "ORD-MBVJ51",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760190629759,
+    "type": "checkout_click",
+    "orderId": "ORD-MC1Y65",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760190974737,
+    "type": "checkout_click",
+    "orderId": "ORD-MC9CEL",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760191569593,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760191670655,
+    "type": "checkout_click",
+    "orderId": "ORD-MCO9DG",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760191695447,
+    "type": "checkout_click",
+    "orderId": "ORD-MCOSHV",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760191804927,
+    "type": "checkout_click",
+    "orderId": "ORD-MCR4ZF",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760191821334,
+    "type": "checkout_click",
+    "orderId": "ORD-MCRHMR",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760192233948,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760192288850,
+    "type": "checkout_click",
+    "orderId": "ORD-MD1IDU",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760192325739,
+    "type": "checkout_click",
+    "orderId": "ORD-MD2AQB",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760193100149,
+    "type": "checkout_click",
+    "orderId": "ORD-MDIVVD",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760193120028,
+    "type": "checkout_click",
+    "orderId": "ORD-MDJBLT",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760193761824,
+    "type": "checkout_click",
+    "orderId": "ORD-MDX2JS",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760193803634,
+    "type": "checkout_click",
+    "orderId": "ORD-MDXZ2G",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760193807151,
+    "type": "checkout_click",
+    "orderId": "ORD-MDY1UW",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760193813238,
+    "type": "checkout_click",
+    "orderId": "ORD-MDY6GG",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760193815738,
+    "type": "checkout_click",
+    "orderId": "ORD-MDY8HC",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760193816832,
+    "type": "checkout_click",
+    "orderId": "ORD-MDY9C0",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760193821024,
+    "type": "checkout_click",
+    "orderId": "ORD-MDYCKG",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760193839911,
+    "type": "checkout_click",
+    "orderId": "ORD-MDYQXS",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760193843569,
+    "type": "checkout_click",
+    "orderId": "ORD-MDYTW8",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760193847338,
+    "type": "checkout_click",
+    "orderId": "ORD-MDYWUG",
+    "productKey": "B"
+  },
+  {
+    "ts": 1760193851117,
+    "type": "checkout_click",
+    "orderId": "ORD-MDYZS8",
+    "productKey": "B"
+  },
+  {
+    "ts": 1760193851585,
+    "type": "checkout_click",
+    "orderId": "ORD-MDZ05C",
+    "productKey": "B"
+  },
+  {
+    "ts": 1760193851799,
+    "type": "checkout_click",
+    "orderId": "ORD-MDZ0BC",
+    "productKey": "B"
+  },
+  {
+    "ts": 1760193896833,
+    "type": "checkout_click",
+    "orderId": "ORD-MDZZ2G",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760193936669,
+    "type": "checkout_click",
+    "orderId": "ORD-ME0TSW",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760194343731,
+    "type": "checkout_click",
+    "orderId": "ORD-ME9JWF",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760194718167,
+    "type": "checkout_click",
+    "orderId": "ORD-MEHKSF",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760194838978,
+    "type": "checkout_click",
+    "orderId": "ORD-MEK60V",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760195087790,
+    "type": "checkout_click",
+    "orderId": "ORD-MEPI0M",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760195137404,
+    "type": "checkout_click",
+    "orderId": "ORD-MEQKAM",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760195210787,
+    "type": "checkout_click",
+    "orderId": "ORD-MES4TY",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760195215124,
+    "type": "checkout_click",
+    "orderId": "ORD-MES86E",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760195230870,
+    "type": "checkout_click",
+    "orderId": "ORD-MESKF2",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760195312960,
+    "type": "checkout_click",
+    "orderId": "ORD-MEUBRI",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760195540178,
+    "type": "checkout_click",
+    "orderId": "ORD-MEZ72U",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760195560247,
+    "type": "checkout_click",
+    "orderId": "ORD-MEZMJH",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760195879107,
+    "type": "checkout_click",
+    "orderId": "ORD-MF6AS5",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760195886758,
+    "type": "checkout_click",
+    "orderId": "ORD-MF6MID",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760195904538,
+    "type": "checkout_click",
+    "orderId": "ORD-MF707P",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760196278986,
+    "type": "checkout_click",
+    "orderId": "ORD-MFF158",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760196801351,
+    "type": "checkout_click",
+    "orderId": "ORD-MFQ878",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760197292795,
+    "type": "checkout_click",
+    "orderId": "ORD-MG0R7F",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760197330114,
+    "type": "checkout_click",
+    "orderId": "ORD-MG1K4B",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760197536404,
+    "type": "checkout_click",
+    "orderId": "ORD-MG5ZCR",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760197731228,
+    "type": "checkout_click",
+    "orderId": "ORD-MGA5OY",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760220173176,
+    "type": "checkout_click",
+    "orderId": "ORD-MTN61T",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760220660995,
+    "type": "checkout_click",
+    "orderId": "ORD-MTXMGV",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760220690098,
+    "type": "checkout_click",
+    "orderId": "ORD-MTY8XB",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760220708786,
+    "type": "checkout_click",
+    "orderId": "ORD-MTYNCF",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760220891991,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760221717440,
+    "type": "checkout_click",
+    "orderId": "ORD-MUK9ML",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760222029963,
+    "type": "checkout_click",
+    "orderId": "ORD-MUQYRX",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760222046547,
+    "type": "checkout_click",
+    "orderId": "ORD-MURBKL",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760222121359,
+    "type": "checkout_click",
+    "orderId": "ORD-MUSXAL",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760222173559,
+    "type": "checkout_click",
+    "orderId": "ORD-MUU1KL",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760222180718,
+    "type": "checkout_click",
+    "orderId": "ORD-MUU73H",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760222763286,
+    "type": "checkout_click",
+    "orderId": "ORD-MV6OLO",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760222966214,
+    "type": "checkout_click",
+    "orderId": "ORD-MVB16R",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760223180461,
+    "type": "checkout_click",
+    "orderId": "ORD-MVFMI3",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760224628133,
+    "type": "checkout_click",
+    "orderId": "ORD-MWANJ5",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760225576745,
+    "type": "checkout_click",
+    "orderId": "ORD-MWUZHB",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760225603103,
+    "type": "checkout_click",
+    "orderId": "ORD-MWVJTZ",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760225971225,
+    "type": "checkout_click",
+    "orderId": "ORD-MX3FVA",
+    "productKey": "B"
+  },
+  {
+    "ts": 1760226668412,
+    "type": "checkout_click",
+    "orderId": "ORD-MXIDTQ",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760226710669,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760226788066,
+    "type": "checkout_click",
+    "orderId": "ORD-MXKY5B",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760226794866,
+    "type": "checkout_click",
+    "orderId": "ORD-MXL3E7",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760226862243,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760226928890,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760227110054,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760227123432,
+    "type": "checkout_click",
+    "orderId": "ORD-MXS4X1",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760227124791,
+    "type": "checkout_click",
+    "orderId": "ORD-MXS5YT",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760227152791,
+    "type": "checkout_click",
+    "orderId": "ORD-MXSRKL",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760227212951,
+    "type": "checkout_click",
+    "orderId": "ORD-MXU1ZP",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760227330215,
+    "type": "checkout_click",
+    "orderId": "ORD-MXWKH1",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760227448154,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760227588073,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760227658327,
+    "type": "checkout_click",
+    "orderId": "ORD-MY3LN8",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760227665191,
+    "type": "checkout_click",
+    "orderId": "ORD-MY3QXW",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760227668982,
+    "type": "checkout_click",
+    "orderId": "ORD-MY3TV8",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228436104,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760228547602,
+    "type": "checkout_click",
+    "orderId": "ORD-MYMNSZ",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228549703,
+    "type": "checkout_click",
+    "orderId": "ORD-MYMPFM",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228553324,
+    "type": "checkout_click",
+    "orderId": "ORD-MYMS8A",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228553501,
+    "type": "checkout_click",
+    "orderId": "ORD-MYMSD7",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228555349,
+    "type": "checkout_click",
+    "orderId": "ORD-MYMTSI",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228557629,
+    "type": "checkout_click",
+    "orderId": "ORD-MYMVJU",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228557812,
+    "type": "checkout_click",
+    "orderId": "ORD-MYMVOZ",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228566637,
+    "type": "checkout_click",
+    "orderId": "ORD-MYN2I3",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228601920,
+    "type": "checkout_click",
+    "orderId": "ORD-MYNTPV",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228777131,
+    "type": "checkout_click",
+    "orderId": "ORD-MYRKWY",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228779216,
+    "type": "checkout_click",
+    "orderId": "ORD-MYRMJ6",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228783248,
+    "type": "checkout_click",
+    "orderId": "ORD-MYRPN6",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228786423,
+    "type": "checkout_click",
+    "orderId": "ORD-MYRS3E",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228789743,
+    "type": "checkout_click",
+    "orderId": "ORD-MYRUNM",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228794423,
+    "type": "checkout_click",
+    "orderId": "ORD-MYRY9M",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228797991,
+    "type": "checkout_click",
+    "orderId": "ORD-MYS10Q",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228801815,
+    "type": "checkout_click",
+    "orderId": "ORD-MYS3YY",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228936252,
+    "type": "checkout_click",
+    "orderId": "ORD-MYUZOQ",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760228953267,
+    "type": "checkout_click",
+    "orderId": "ORD-MYVCTM",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760358054140,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760358097146,
+    "type": "checkout_click",
+    "orderId": "ORD-P3RCV9",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760358144497,
+    "type": "checkout_click",
+    "orderId": "ORD-P3SDF8",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760358709285,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760358724200,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760359976717,
+    "type": "checkout_click",
+    "orderId": "ORD-P4VN63",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760360025485,
+    "type": "checkout_click",
+    "orderId": "ORD-P4WOSR",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760360415349,
+    "type": "checkout_click",
+    "orderId": "ORD-P551MB",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760360473517,
+    "type": "checkout_click",
+    "orderId": "ORD-P56AHU",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760360621057,
+    "type": "checkout_click",
+    "orderId": "ORD-P59GCA",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760360638717,
+    "type": "checkout_click",
+    "orderId": "ORD-P59TYQ",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760361551702,
+    "type": "checkout_click",
+    "orderId": "ORD-P5TEFM",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760361573633,
+    "type": "checkout_click",
+    "orderId": "ORD-P5TVCI",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760361673877,
+    "type": "checkout_click",
+    "orderId": "ORD-P5W0PD",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760361724924,
+    "type": "checkout_click",
+    "orderId": "ORD-P5X43D",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760361880237,
+    "type": "checkout_click",
+    "orderId": "ORD-P60FXN",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760361904435,
+    "type": "checkout_click",
+    "orderId": "ORD-P60YLD",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760362409133,
+    "type": "checkout_click",
+    "orderId": "ORD-P6BS15",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760362429291,
+    "type": "checkout_click",
+    "orderId": "ORD-P6C7L5",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760362755579,
+    "type": "checkout_click",
+    "orderId": "ORD-P6J7CO",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760362762403,
+    "type": "checkout_click",
+    "orderId": "ORD-P6JCM8",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760363071908,
+    "type": "checkout_click",
+    "orderId": "ORD-P6PZFK",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760363581450,
+    "type": "checkout_click",
+    "orderId": "ORD-P70WLK",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760363727450,
+    "type": "checkout_click",
+    "orderId": "ORD-P74193",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760363863138,
+    "type": "checkout_click",
+    "orderId": "ORD-P76XY7",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760363926050,
+    "type": "checkout_click",
+    "orderId": "ORD-P78AHS",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760363932217,
+    "type": "checkout_click",
+    "orderId": "ORD-P78F93",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760363956746,
+    "type": "checkout_click",
+    "orderId": "ORD-P78Y6G",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760364011075,
+    "type": "checkout_click",
+    "orderId": "ORD-P7A43R",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760364576554,
+    "type": "checkout_click",
+    "orderId": "ORD-P7M8FB",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760364836432,
+    "type": "checkout_click",
+    "orderId": "ORD-P7RSY7",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760365462745,
+    "type": "checkout_click",
+    "orderId": "ORD-P8587Q",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760365474649,
+    "type": "checkout_click",
+    "orderId": "ORD-P85HEE",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760365508048,
+    "type": "checkout_click",
+    "orderId": "ORD-P86766",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760365508976,
+    "type": "checkout_click",
+    "orderId": "ORD-P867VY",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760365884475,
+    "type": "checkout_click",
+    "orderId": "ORD-P8E9MG",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760366394328,
+    "type": "checkout_click",
+    "orderId": "ORD-P8P711",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760366397240,
+    "type": "checkout_click",
+    "orderId": "ORD-P8P99X",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760366402385,
+    "type": "checkout_click",
+    "orderId": "ORD-P8PD8T",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760366407497,
+    "type": "checkout_click",
+    "orderId": "ORD-P8PH6T",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760366415880,
+    "type": "checkout_click",
+    "orderId": "ORD-P8PNNQ",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760366417887,
+    "type": "checkout_click",
+    "orderId": "ORD-P8PP7H",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760366430360,
+    "type": "checkout_click",
+    "orderId": "ORD-P8PYTX",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760366444904,
+    "type": "checkout_click",
+    "orderId": "ORD-P8QA1Y",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760366790215,
+    "type": "checkout_click",
+    "orderId": "ORD-P8XOHX",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760366795607,
+    "type": "checkout_click",
+    "orderId": "ORD-P8XSNP",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760366955615,
+    "type": "checkout_click",
+    "orderId": "ORD-P9184D",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760367132631,
+    "type": "checkout_click",
+    "orderId": "ORD-P950PH",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760367343508,
+    "type": "checkout_click",
+    "orderId": "ORD-P99JF9",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760367618438,
+    "type": "checkout_click",
+    "orderId": "ORD-P9FFK4",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760367637838,
+    "type": "checkout_click",
+    "orderId": "ORD-P9FUJ0",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760367947806,
+    "type": "checkout_click",
+    "orderId": "ORD-P9MHP8",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760368074854,
+    "type": "checkout_click",
+    "orderId": "ORD-P9P7QC",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760378463981,
+    "type": "checkout_click",
+    "orderId": "ORD-PFVW17",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760378624192,
+    "type": "checkout_click",
+    "orderId": "ORD-PFZBMZ",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760379568341,
+    "type": "checkout_click",
+    "orderId": "ORD-PGJK5U",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760379575421,
+    "type": "checkout_click",
+    "orderId": "ORD-PGJPMI",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760379663060,
+    "type": "checkout_click",
+    "orderId": "ORD-PGLL8Y",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760380040436,
+    "type": "checkout_click",
+    "orderId": "ORD-PGTOFM",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760380200988,
+    "type": "checkout_click",
+    "orderId": "ORD-PGX4BD",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760380606523,
+    "type": "checkout_click",
+    "orderId": "ORD-PH5T89",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760380738126,
+    "type": "checkout_click",
+    "orderId": "ORD-PH8MRL",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760381051724,
+    "type": "checkout_click",
+    "orderId": "ORD-PHFCQX",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760381060011,
+    "type": "checkout_click",
+    "orderId": "ORD-PHFJ55",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760381816754,
+    "type": "checkout_click",
+    "orderId": "ORD-PHVR1S",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760382139162,
+    "type": "checkout_click",
+    "orderId": "ORD-PI2NTK",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760382839274,
+    "type": "checkout_click",
+    "orderId": "ORD-PIHO13",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760382974105,
+    "type": "checkout_click",
+    "orderId": "ORD-PIKK2F",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760383020352,
+    "type": "checkout_click",
+    "orderId": "ORD-PILJR3",
+    "productKey": "B"
+  },
+  {
+    "ts": 1760383281009,
+    "type": "checkout_click",
+    "orderId": "ORD-PIR4VJ",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760383553224,
+    "type": "checkout_click",
+    "orderId": "ORD-PIWYXA",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760384490731,
+    "type": "checkout_click",
+    "orderId": "ORD-PJH2AD",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760384588728,
+    "type": "checkout_click",
+    "orderId": "ORD-PJJ5X2",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760384599768,
+    "type": "checkout_click",
+    "orderId": "ORD-PJJEFP",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760385058149,
+    "type": "checkout_click",
+    "orderId": "ORD-PJT845",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760385274765,
+    "type": "checkout_click",
+    "orderId": "ORD-PJXV91",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760385888599,
+    "type": "checkout_click",
+    "orderId": "ORD-PKB0WL",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760386194974,
+    "type": "checkout_click",
+    "orderId": "ORD-PKHLAL",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760386794662,
+    "type": "checkout_click",
+    "orderId": "ORD-PKUG0K",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760386838550,
+    "type": "checkout_click",
+    "orderId": "ORD-PKVDW4",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760386852278,
+    "type": "checkout_click",
+    "orderId": "ORD-PKVOHG",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760387187605,
+    "type": "checkout_click",
+    "orderId": "ORD-PL2V7V",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760387411797,
+    "type": "checkout_click",
+    "orderId": "ORD-PL7O7N",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760387651941,
+    "type": "checkout_click",
+    "orderId": "ORD-PLCTIB",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760388627790,
+    "type": "checkout_click",
+    "orderId": "ORD-PLXQH6",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760397284035,
+    "type": "checkout_click",
+    "orderId": "ORD-PR39NU",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760397835563,
+    "type": "checkout_click",
+    "orderId": "ORD-PRF38P",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760446178555,
+    "type": "checkout_click",
+    "orderId": "ORD-QK78X0",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760446185166,
+    "type": "checkout_click",
+    "orderId": "ORD-QK7E18",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760446554100,
+    "type": "checkout_click",
+    "orderId": "ORD-QKFAP7",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760446561360,
+    "type": "checkout_click",
+    "orderId": "ORD-QKFGB7",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760446964139,
+    "type": "checkout_click",
+    "orderId": "ORD-QKO32Y",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760447402245,
+    "type": "checkout_click",
+    "orderId": "ORD-QKXH4Y",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760464694820,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760464783840,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760464918482,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760464998506,
+    "type": "message_in",
+    "wa_id": "+556584361007"
+  },
+  {
+    "ts": 1760465237537,
+    "type": "checkout_click",
+    "orderId": "ORD-QVJQXQ",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760465243176,
+    "type": "checkout_click",
+    "orderId": "ORD-QVJVAE",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760465503336,
+    "type": "checkout_click",
+    "orderId": "ORD-QVPG12",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760466127062,
+    "type": "checkout_click",
+    "orderId": "ORD-QW2TAU",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760466832481,
+    "type": "checkout_click",
+    "orderId": "ORD-QWHXLQ",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760467147714,
+    "type": "checkout_click",
+    "orderId": "ORD-QWOOU6",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760467701172,
+    "type": "checkout_click",
+    "orderId": "ORD-QX0JVY",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760468211495,
+    "type": "checkout_click",
+    "orderId": "ORD-QXBHNA",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760469024649,
+    "type": "checkout_click",
+    "orderId": "ORD-QXSX3A",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760469235608,
+    "type": "checkout_click",
+    "orderId": "ORD-QXXFVA",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760470072944,
+    "type": "checkout_click",
+    "orderId": "ORD-QYFDY6",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760473284379,
+    "type": "checkout_click",
+    "orderId": "ORD-R0C7WU",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760473716222,
+    "type": "checkout_click",
+    "orderId": "ORD-R0LH4M",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760474294353,
+    "type": "checkout_click",
+    "orderId": "ORD-R0XV7Y",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760474988649,
+    "type": "checkout_click",
+    "orderId": "ORD-R1CQXI",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760475038136,
+    "type": "purchase",
+    "orderId": null,
+    "productKey": "A",
+    "amount": 0.02
+  },
+  {
+    "ts": 1760475040450,
+    "type": "purchase",
+    "orderId": null,
+    "productKey": "A",
+    "amount": 0.02
+  },
+  {
+    "ts": 1760475099760,
+    "type": "checkout_click",
+    "orderId": "ORD-R1F4OE",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760475183677,
+    "type": "purchase",
+    "orderId": null,
+    "productKey": "A",
+    "amount": 2
+  },
+  {
+    "ts": 1760475183696,
+    "type": "purchase",
+    "orderId": null,
+    "productKey": "A",
+    "amount": 2
+  },
+  {
+    "ts": 1760475735942,
+    "type": "checkout_click",
+    "orderId": "ORD-R1SRJY",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760475816656,
+    "type": "checkout_click",
+    "orderId": "ORD-R1UHU6",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760475832080,
+    "type": "purchase",
+    "orderId": null,
+    "productKey": "A",
+    "amount": 0.5
+  },
+  {
+    "ts": 1760475832319,
+    "type": "purchase",
+    "orderId": null,
+    "productKey": "A",
+    "amount": 0.5
+  },
+  {
+    "ts": 1760476342740,
+    "type": "checkout_click",
+    "orderId": "ORD-R25RRA",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760476366919,
+    "type": "purchase",
+    "payment_id": "129930123506",
+    "orderId": null,
+    "productKey": "A",
+    "amount": 0.1
+  },
+  {
+    "ts": 1760476387003,
+    "type": "checkout_click",
+    "orderId": "ORD-R26PXA",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760476429120,
+    "type": "checkout_click",
+    "orderId": "ORD-R27MF2",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760476444914,
+    "type": "purchase",
+    "payment_id": "129930790958",
+    "orderId": null,
+    "productKey": "A",
+    "amount": 0.11
+  },
+  {
+    "ts": 1760482086620,
+    "type": "checkout_click",
+    "orderId": "ORD-R5KVRA",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760482125075,
+    "type": "purchase",
+    "payment_id": "129367381491",
+    "orderId": null,
+    "productKey": "A",
+    "method": "pix",
+    "amount": 0.11
+  },
+  {
+    "ts": 1760482925625,
+    "type": "checkout_click",
+    "orderId": "ORD-R62V5I",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760482955539,
+    "type": "purchase",
+    "payment_id": "129946486186",
+    "orderId": null,
+    "productKey": "A",
+    "method": "pix",
+    "amount": 0.1
+  },
+  {
+    "ts": 1760485581840,
+    "type": "checkout_click",
+    "orderId": "ORD-R7NSPA",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760487907415,
+    "type": "checkout_click",
+    "orderId": "ORD-R91N4M",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760487960285,
+    "type": "purchase",
+    "payment_id": "129380130001",
+    "orderId": null,
+    "productKey": "A",
+    "method": "pix",
+    "amount": 0.1
+  },
+  {
+    "ts": 1760488729823,
+    "type": "checkout_click",
+    "orderId": "ORD-R9J9P2",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760488753317,
+    "type": "checkout_click",
+    "orderId": "ORD-R9JRU6",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760488777725,
+    "type": "purchase",
+    "payment_id": "129381519879",
+    "orderId": null,
+    "productKey": "A",
+    "method": "pix",
+    "amount": 0.12
+  },
+  {
+    "ts": 1760489515759,
+    "type": "checkout_click",
+    "orderId": "ORD-RA044U",
+    "productKey": "A"
+  },
+  {
+    "ts": 1760489537089,
+    "type": "purchase",
+    "payment_id": "129957595714",
+    "orderId": null,
+    "productKey": "A",
+    "method": "pix",
+    "amount": 0.13
+  },
+  {
+    "ts": 1760489805704,
+    "type": "checkout_click",
+    "orderId": "ORD-RA6BUU",
+    "productKey": "A"
+  }
+]

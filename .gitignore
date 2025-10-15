@@ -1,0 +1,15 @@
+﻿node_modules/
+dist/
+.build/
+.cache/
+.env
+uploads/
+.vscode/
+*.log
+
+analytics.json
+leads.json
+campaigns.json
+campaign.json
+contacts.json
+config.json

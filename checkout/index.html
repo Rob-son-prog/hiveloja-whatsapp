@@ -12,7 +12,7 @@
     .wrap{max-width:980px;margin:32px auto;padding:0 16px}
     .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
     .tabs{display:flex;gap:8px;flex-wrap:wrap}
-    .tab{border:1px solid var(--bd);background:#0f1115;color:var(--txt);padding:8px 12px;border-radius:10px;cursor:pointer}
+    .tab{border:1px solid var(--bd);background:#0f1115;color:#txt;padding:8px 12px;border-radius:10px;cursor:pointer}
     .tab.active{background:var(--acc);color:#092b14;font-weight:700;border-color:#15803d}
     .grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
     .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px}
@@ -84,7 +84,7 @@
   <!-- SDK do Mercado Pago -->
   <script src="https://sdk.mercadopago.com/js/v2"></script>
   <script>
-    /* TROQUE pela sua PUBLIC KEY (produção): ex: 'APP_USR-xxxxxxxx...' */
+    /* TROQUE pela sua PUBLIC KEY (produção) */
     window.MP_PUBLIC_KEY = 'APP_USR-d773af7e-3337-4a03-8e51-9a303624a029';
   </script>
 </head>
@@ -156,6 +156,16 @@
   const fmtBRL = (n)=> n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
   const makeOrderId = ()=> 'ORD-' + Date.now().toString(36).toUpperCase().slice(-6);
   const el = (id)=>document.getElementById(id);
+
+  /* ===== NOVO: capturar e persistir o WhatsApp do cliente ===== */
+  (function persistWhatsAppFromURL(){
+    try{
+      const params = new URLSearchParams(location.search);
+      const wa = (params.get('wa') || '').replace(/\D/g,'');
+      if (wa) localStorage.setItem('checkout_wa', wa);
+    }catch{}
+  })();
+  function getCheckoutWA(){ try{ return (localStorage.getItem('checkout_wa') || '').replace(/\D/g,''); }catch{ return ''; } }
 
   /* =================== Estado =================== */
   let CONFIG=null, cur='A', CURRENT_ORDER_ID=null;
@@ -533,7 +543,7 @@
       try {
         const r = await fetch('/mp/process-payment', {
           method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ orderId, productKey, method, bumps: flags })
+          body: JSON.stringify({ orderId, productKey, method, bumps: flags, wa: getCheckoutWA() })
         });
         const j = await r.json();
         if (!j?.ok) { out.innerHTML = `<span style="color:#f87171">Falha: ${j?.error || 'erro desconhecido'}</span>`; return; }
@@ -551,7 +561,7 @@
           const b = document.getElementById('copyPix');
           if (b) b.onclick = async ()=>{ try{ await navigator.clipboard.writeText(copia_e_cola||''); b.textContent='Copiado!'; setTimeout(()=>b.textContent='Copiar código',1500);}catch{} };
 
-          // >>> Inicia o watcher do PIX (usa id retornado e o orderId atual)
+          // >>> Inicia o watcher do PIX
           startPixWatcher(j.id, orderId);
 
         } else { out.innerHTML = 'Pagamento criado.'; }
@@ -559,7 +569,7 @@
       return;
     }
 
-    // CARTÃO → dispara submit do SDK
+    // CARTÃO
     if (method === 'card') {
       updatePayPanelTotal();
       const form = document.getElementById('card-form');
@@ -595,7 +605,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            orderId, productKey, method, bumps: flags,
+            orderId, productKey, method, bumps: flags, wa: getCheckoutWA(),
             boleto: {
               name, cpf, email,
               address: {
@@ -663,7 +673,7 @@
       }
 
       const payload = {
-        orderId, productKey, method:'card', bumps: flags,
+        orderId, productKey, method:'card', bumps: flags, wa: getCheckoutWA(),
         card: {
           token: data.token,
           installments: Number(data.installments) || 1,
@@ -784,6 +794,7 @@
     const bumps = Array.from(el('bumps').querySelectorAll('input[type=checkbox]'));
     const params = new URLSearchParams();
     bumps.forEach(chk => params.set(chk.dataset.id, chk.checked ? '1' : '0'));
+    const wa = getCheckoutWA(); if (wa) params.set('wa', wa);
     const glue = url.includes('?') ? '&' : '?';
     url = url + glue + params.toString();
     return url;
@@ -800,7 +811,7 @@
       } else {
         fetch('/analytics/checkout-click', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload), keepalive:true }).catch(()=>{});
       }
-    } catch(e){}
+    } catch{}
 
     togglePayPanel(true);
     setTimeout(mountCardFormWhenReady, 200);

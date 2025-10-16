@@ -764,22 +764,28 @@ app.post('/mp/process-payment', async (req, res) => {
               city:          c.payer.address.city          ?? c.payer.address.cidade       ?? undefined,
               federal_unit:  c.payer.address.federal_unit  ?? c.payer.address.state        ?? c.payer.address.uf ?? undefined,
             } : undefined,
+            phone: c?.payer?.phone ? {
+              area_code: c.payer.phone.area_code ?? undefined,
+              number:    c.payer.phone.number    ?? undefined
+            } : undefined
           },
           additional_info: {
             ip_address: clientIp,
             items: [{ id:`PROD-${productKey}`, title, quantity:1, unit_price:Number(amount) }],
             payer: {
               first_name: c?.payer?.first_name || 'Cliente',
-              last_name:  c?.payer?.last_name  || 'Site',
-              registration_date: new Date().toISOString().slice(0,10)
+              last_name:  c?.payer?.last_name  || 'Site'
             }
           },
-          metadata: { orderId, productKey, bumps: flags }
+          metadata: { orderId, productKey, bumps: flags, wa: (req.body.wa || '').toString().trim() || null }
         };
 
         Object.keys(body).forEach(k => body[k] === undefined && delete body[k]);
         if (body.payer && body.payer.address) {
           Object.keys(body.payer.address).forEach(k => body.payer.address[k] === undefined && delete body.payer.address[k]);
+        }
+        if (body.payer && body.payer.phone) {
+          Object.keys(body.payer.phone).forEach(k => body.payer.phone[k] === undefined && delete body.payer.phone[k]);
         }
 
         try {
@@ -802,7 +808,7 @@ app.post('/mp/process-payment', async (req, res) => {
           payer: { email: req.body?.payer?.email || 'compras@example.com' },
           binary_mode: true,
           notification_url: NOTIFY,
-          metadata: { orderId, productKey, bumps: flags }
+          metadata: { orderId, productKey, bumps: flags, wa: (req.body.wa || '').toString().trim() || null }
         };
 
         const resp = await mpPayment.create({ body });
@@ -885,7 +891,7 @@ app.post('/mp/process-payment', async (req, res) => {
               federal_unit: address.federal_unit
             }
           },
-          metadata: { orderId, productKey, bumps: flags }
+          metadata: { orderId, productKey, bumps: flags, wa: (req.body.wa || '').toString().trim() || null }
         };
 
         const resp = await mpPayment.create({ body });
@@ -934,6 +940,7 @@ app.post('/mp/process-payment', async (req, res) => {
       metadata: {
         orderId: req.body?.metadata?.orderId || null,
         productKey: req.body?.metadata?.productKey || null,
+        wa: (req.body?.metadata?.wa || '').toString().trim() || null
       }
     };
     Object.keys(body).forEach(k => body[k] === undefined && delete body[k]);
@@ -1103,16 +1110,36 @@ async function handleMpWebhook(req, res) {
       console.warn('[MP WEBHOOK] falhou ao registrar analytics:', e.message);
     }
 
-    // 4) Tenta entregar por WhatsApp (opcional, só se soubermos o número)
+    // 4) Tenta entregar por WhatsApp (mais robusto)
     const orderId = p.metadata?.orderId;
-    const cached  = orderId ? ORDERS.get(orderId) : null;
-    const to      = cached?.to;
-    const key     = ((p.metadata?.productKey || cached?.productKey) === 'B') ? 'B' : 'A';
+    let cached  = orderId ? ORDERS.get(orderId) : null;
 
-    if (!to) {
-      console.warn('[MP WEBHOOK] não achei o número do cliente para orderId:', orderId);
-      return; // sem número, não dá pra enviar entrega — mas a venda já foi contabilizada
+    // tenta obter destino (to) por 4 fontes: cache, metadata.wa, payer.phone, fallback logs
+    let to = cached?.to;
+
+    // (a) metadata.wa
+    if (!to && p?.metadata?.wa) {
+      const n = normPhone(p.metadata.wa);
+      if (n) to = n;
     }
+
+    // (b) payer.phone {area_code, number}
+    if (!to) {
+      const ph = p?.payer?.phone || p?.additional_info?.payer?.phone || null;
+      if (ph) {
+        const raw = `${ph.area_code || ''}${ph.number || ''}`.trim();
+        const n = normPhone(raw);
+        if (n) to = n;
+      }
+    }
+
+    // (c) se ainda não há, registra aviso e encerra (venda já contabilizada)
+    if (!to) {
+      console.warn('[MP WEBHOOK] não achei o número do cliente (sem ORDERS, metadata.wa ou payer.phone). orderId=', orderId);
+      return;
+    }
+
+    const key     = ((p.metadata?.productKey || cached?.productKey) === 'B') ? 'B' : 'A';
 
     // marca contato como comprador
     try {
@@ -1603,6 +1630,16 @@ app.post('/analytics/checkout-click', (req, res) => {
   try {
     const orderId = (req.body?.orderId || '').toString().slice(0,64);
     const productKey = (req.body?.productKey === 'B' ? 'B' : 'A');
+
+    // NOVO: se vier wa, já associa ao pedido
+    const rawWa = (req.body?.wa || '').toString().trim();
+    if (rawWa) {
+      const norm = normPhone(rawWa);
+      if (norm) {
+        ORDERS.set(orderId, { to: norm, productKey, createdAt: Date.now() });
+      }
+    }
+
     logEvent({ type: 'checkout_click', orderId, productKey });
     return res.json({ ok: true });
   } catch (e) {
@@ -1700,23 +1737,6 @@ app.get('/analytics/stats', (req, res) => {
   }
 });
 
-// === PAY STATUS (consulta simples p/ o watcher do PIX) ======================
-app.get('/analytics/pay-status', (req, res) => {
-  try {
-    const pid = (req.query.payment_id || '').toString().trim();
-    const oid = (req.query.orderId || '').toString().trim();
-
-    const approved = ANALYTICS.some(e =>
-      e.type === 'purchase' &&
-      ((pid && e.payment_id === pid) || (oid && e.orderId === oid))
-    );
-
-    res.json({ ok: true, approved });
-  } catch (e) {
-    console.error('[analytics/pay-status]', e.message);
-    res.status(500).json({ ok:false, approved:false });
-  }
-});
 
 // === Status de pagamento por orderId/payment_id (para o checkout "escutar")
 app.get('/analytics/pay-status', (req, res) => {

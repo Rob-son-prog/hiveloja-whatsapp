@@ -22,22 +22,33 @@
     .danger { color:#b32d2e; font-size:12px; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 
+    /* ——— extra da área de campanhas ——— */
     .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#eef3ff; color:#1d3dbf; font-size:12px; }
     .hr { height:1px; background:#eee; margin:12px 0; }
     .right { text-align:right; }
     .codebox { background:#f7f7f7; border:1px solid #eee; padding:10px; border-radius:10px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size:12px; max-height:140px; overflow:auto; }
 
     .backdash {
-      position: fixed; top: 14px; right: 14px; z-index: 9999;
-      background: #22c55e; color: #062a12; font: 600 14px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      padding: 10px 14px; border-radius: 10px; text-decoration: none;
-      box-shadow: 0 6px 18px rgba(0,0,0,.35); border: 0; transition: transform .06s ease, filter .2s ease;
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 9999;
+      background: #22c55e;
+      color: #062a12;
+      font: 600 14px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      padding: 10px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      box-shadow: 0 6px 18px rgba(0,0,0,.35);
+      border: 0;
+      transition: transform .06s ease, filter .2s ease;
       display: inline-flex; align-items: center; gap: 8px;
     }
     .backdash:hover { transform: translateY(-1px); filter: brightness(1.05); }
     .backdash:active { transform: translateY(0); }
     .backdash svg { width: 16px; height: 16px; }
 
+    /* preview da mídia do template */
     .media-row { display:flex; gap:8px; align-items:center; }
     .media-preview { display:none; gap:12px; align-items:flex-start; margin-top:6px; }
     .media-preview img, .media-preview video { max-width:220px; border:1px solid #eee; border-radius:8px; }
@@ -53,18 +64,31 @@
   </a>
 
   <div class="wrap">
-    <h1>Configurar página/fluxo da <span class="mono">Api wWStssap </span></h1>
+    <h1>Configurar página/fluxo da <span class="mono">Lista de Fornecedores</span></h1>
 
     <div class="grid">
+      <!-- Oferta “menu” (fallback) -->
       <div class="card">
         <h3>Mensagem padrão (“menu”)</h3>
         <div class="grid">
-          <div><label>Título</label><input id="titulo" placeholder="Lista de Fornecedores de Atacado"></div>
-          <div class="col2">
-            <div><label>Preço</label><input id="preco" placeholder="R$ 19,90"></div>
-            <div><label>WhatsApp de suporte (E.164)</label><input id="whatsapp_suporte" placeholder="+5565984361007"></div>
+          <div>
+            <label>Título</label>
+            <input id="titulo" placeholder="Lista de Fornecedores de Atacado">
           </div>
-          <div><label>Texto persuasivo</label><textarea id="texto" placeholder="Receba a lista completa imediatamente após o pagamento."></textarea></div>
+          <div class="col2">
+            <div>
+              <label>Preço</label>
+              <input id="preco" placeholder="R$ 19,90">
+            </div>
+            <div>
+              <label>WhatsApp de suporte (E.164)</label>
+              <input id="whatsapp_suporte" placeholder="+5565984361007">
+            </div>
+          </div>
+          <div>
+            <label>Texto persuasivo</label>
+            <textarea id="texto" placeholder="Receba a lista completa imediatamente após o pagamento."></textarea>
+          </div>
           <div>
             <label>Checkout URL (usa <span class="mono">{ORDER_ID}</span>)</label>
             <input id="checkout_url" placeholder="https://pay.cakto.com.br/SEU_LINK?orderId={ORDER_ID}">
@@ -73,6 +97,7 @@
         </div>
       </div>
 
+      <!-- Saudação + Botões -->
       <div class="card">
         <h3>Saudação inicial + botões</h3>
         <div class="grid col2">
@@ -90,36 +115,63 @@
         </div>
       </div>
 
+      <!-- Produto A -->
       <div class="card">
         <h3>Produto A</h3>
         <div class="grid">
           <div class="col2">
-            <div><label>Rótulo do botão (exibição)</label><input id="produtoA_rotulo" placeholder="Oferta A"></div>
-            <div><label>Título</label><input id="produtoA_titulo" placeholder="Lista de Fornecedores Premium"></div>
+            <div>
+              <label>Rótulo do botão (exibição)</label>
+              <input id="produtoA_rotulo" placeholder="Oferta A">
+            </div>
+            <div>
+              <label>Título</label>
+              <input id="produtoA_titulo" placeholder="Lista de Fornecedores Premium">
+            </div>
           </div>
           <div class="col2">
-            <div><label>Preço</label><input id="produtoA_preco" placeholder="R$ 19,90"></div>
-            <div><label>Checkout URL (usa <span class="mono">{ORDER_ID}</span>)</label><input id="produtoA_checkout" placeholder="https://pay.cakto.com.br/SEU_LINK_A?orderId={ORDER_ID}"></div>
+            <div>
+              <label>Preço</label>
+              <input id="produtoA_preco" placeholder="R$ 19,90">
+            </div>
+            <div>
+              <label>Checkout URL (usa <span class="mono">{ORDER_ID}</span>)</label>
+              <input id="produtoA_checkout" placeholder="https://pay.cakto.com.br/SEU_LINK_A?orderId={ORDER_ID}">
+            </div>
           </div>
           <div class="muted">Preview: <span id="prevA" class="mono">–</span></div>
         </div>
       </div>
 
+      <!-- Produto B -->
       <div class="card">
         <h3>Produto B</h3>
         <div class="grid">
           <div class="col2">
-            <div><label>Rótulo do botão (exibição)</label><input id="produtoB_rotulo" placeholder="Oferta B"></div>
-            <div><label>Título</label><input id="produtoB_titulo" placeholder="Lista com Contatos Extras"></div>
+            <div>
+              <label>Rótulo do botão (exibição)</label>
+              <input id="produtoB_rotulo" placeholder="Oferta B">
+            </div>
+            <div>
+              <label>Título</label>
+              <input id="produtoB_titulo" placeholder="Lista com Contatos Extras">
+            </div>
           </div>
           <div class="col2">
-            <div><label>Preço</label><input id="produtoB_preco" placeholder="R$ 29,90"></div>
-            <div><label>Checkout URL (usa <span class="mono">{ORDER_ID}</span>)</label><input id="produtoB_checkout" placeholder="https://pay.cakto.com.br/SEU_LINK_B?orderId={ORDER_ID}"></div>
+            <div>
+              <label>Preço</label>
+              <input id="produtoB_preco" placeholder="R$ 29,90">
+            </div>
+            <div>
+              <label>Checkout URL (usa <span class="mono">{ORDER_ID}</span>)</label>
+              <input id="produtoB_checkout" placeholder="https://pay.cakto.com.br/SEU_LINK_B?orderId={ORDER_ID}">
+            </div>
           </div>
           <div class="muted">Preview: <span id="prevB" class="mono">–</span></div>
         </div>
       </div>
 
+      <!-- Ações -->
       <div class="row">
         <button id="save" class="btn">Salvar</button>
         <button id="reload" class="btn outline">Recarregar</button>
@@ -127,18 +179,32 @@
         <span id="err" class="danger" style="display:none">falha ao salvar</span>
       </div>
 
+      <!-- Campanhas (beta) -->
       <div class="card">
         <h3>Campanhas de WhatsApp <span class="pill">beta</span></h3>
         <div class="grid">
           <div class="col2">
-            <div><label>Nome da campanha</label><input id="c_name" placeholder="Ex.: Reengajamento D+1"></div>
-            <div><label>Início (data/hora)</label><input id="c_start" type="datetime-local"></div>
+            <div>
+              <label>Nome da campanha</label>
+              <input id="c_name" placeholder="Ex.: Reengajamento D+1">
+            </div>
+            <div>
+              <label>Início (data/hora)</label>
+              <input id="c_start" type="datetime-local">
+            </div>
           </div>
 
           <div class="col2">
-            <div><label>Alvo: últimos contato há (dias) — envia para quem <b>≥</b> esse tempo</label><input id="c_days" type="number" min="0" step="1" placeholder="1"></div>
-            <div><label>Excluir quem já comprou</label>
-              <select id="c_exclude_paid"><option value="yes">Sim, excluir</option><option value="no">Não</option></select>
+            <div>
+              <label>Alvo: últimos contato há (dias) — envia para quem <b>≥</b> esse tempo</label>
+              <input id="c_days" type="number" min="0" step="1" placeholder="1">
+            </div>
+            <div>
+              <label>Excluir quem já comprou</label>
+              <select id="c_exclude_paid">
+                <option value="yes">Sim, excluir</option>
+                <option value="no">Não</option>
+              </select>
             </div>
           </div>
 
@@ -150,12 +216,13 @@
                 <option value="only24">Somente dentro de 24h (texto livre)</option>
                 <option value="onlyTemplate">Sempre com template (recomendado p/ &gt;24h)</option>
               </select>
-              <div class="muted">Fora de 24h só com <b>template aprovado</b>.</div>
+              <div class="muted">Restrições Meta: fora de 24h só com <b>template aprovado</b>.</div>
             </div>
             <div>
               <label>Intervalo entre envios (segundos)</label>
               <div class="row" style="gap:6px">
-                <input id="c_min_s" type="number" min="1" value="60" style="max-width:120px"><span>até</span>
+                <input id="c_min_s" type="number" min="1" value="60" style="max-width:120px">
+                <span>até</span>
                 <input id="c_max_s" type="number" min="1" value="150" style="max-width:120px">
                 <span class="muted">com leve aleatoriedade</span>
               </div>
@@ -178,6 +245,7 @@
               <label style="margin-top:8px">Parâmetros do template (separe por vírgula)</label>
               <input id="c_tpl_params" placeholder="Ex.: Robson, 29,90, hoje">
 
+              <!-- ====== Campo de MÍDIA com botão de anexar + preview ====== -->
               <label style="margin-top:8px">Mídia (URL opcional do template)</label>
               <div class="media-row">
                 <input id="c_tpl_media" placeholder="https://.../arquivo.jpg ou .mp4" style="flex:1;">
@@ -188,7 +256,8 @@
                 <img id="c_tpl_media_img" alt="preview" />
                 <video id="c_tpl_media_video" controls></video>
               </div>
-              <div class="muted">Use arquivo direto (.jpg/.png/.mp4 etc.). Links YouTube/Instagram não são aceitos como mídia do WhatsApp — serão enviados apenas como texto com link.</div>
+              <div class="muted">Use arquivo direto (terminando em .jpg/.png/.mp4 etc.). Links YouTube/Instagram não são aceitos como mídia do WhatsApp — serão enviados apenas como texto com link.</div>
+              <!-- ====== /MÍDIA ====== -->
             </div>
           </div>
 
@@ -210,6 +279,7 @@
           </div>
         </div>
       </div>
+      <!-- /Campanhas -->
     </div>
   </div>
 
@@ -250,6 +320,7 @@
       whatsapp_suporte: S('whatsapp_suporte').value.trim(),
       checkout_url: S('checkout_url').value.trim(),
       saudacao: S('saudacao').value,
+
       produtoA: {
         rotulo: S('produtoA_rotulo').value.trim() || S('botaoA').value.trim(),
         titulo: S('produtoA_titulo').value.trim(),
@@ -273,27 +344,48 @@
   }
   ['produtoA_checkout','produtoB_checkout'].forEach(id => S(id).addEventListener('input', updatePreview));
 
-  async function load(){ const r = await fetch('/config'); const cfg = await r.json(); fill(cfg); }
+  async function load(){
+    const r = await fetch('/config');
+    const cfg = await r.json();
+    fill(cfg);
+  }
+
   async function save(){
-    S('status').style.display='none'; S('err').style.display='none';
+    S('status').style.display='none';
+    S('err').style.display='none';
     const body = collect();
     const r = await fetch('/config', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const j = await r.json();
     if (j?.ok) { S('status').style.display='inline'; } else { S('err').style.display='inline'; }
   }
-  S('save').onclick = save; S('reload').onclick = load; load();
+
+  S('save').onclick = save;
+  S('reload').onclick = load;
+  load();
 
   // ===== Campanhas =====
   function buildCampaignPayload(){
     const startIso = (S('c_start').value ? new Date(S('c_start').value).toISOString() : null);
-    const params = (S('c_tpl_params').value || '').split(',').map(s => s.trim()).filter(Boolean);
+    const params = (S('c_tpl_params').value || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+
     const minS = Math.max(1, Number(S('c_min_s').value || 60));
     const maxS = Math.max(minS, Number(S('c_max_s').value || 150));
+
     return {
       name: S('c_name').value.trim() || 'Campanha sem nome',
       start_at: startIso,
-      filter: { last_incoming_gte_days: Number(S('c_days').value || 0), exclude_paid: S('c_exclude_paid').value === 'yes' },
-      policy: { mode: S('c_mode').value, throttle_seconds_min: minS, throttle_seconds_max: maxS },
+      filter: {
+        last_incoming_gte_days: Number(S('c_days').value || 0), // >= X dias
+        exclude_paid: S('c_exclude_paid').value === 'yes'
+      },
+      policy: {
+        mode: S('c_mode').value, // auto / only24 / onlyTemplate
+        throttle_seconds_min: minS,
+        throttle_seconds_max: maxS
+      },
       content: {
         text_24h: S('c_text').value,
         template_name: S('c_tpl').value.trim(),
@@ -305,18 +397,65 @@
     };
   }
 
-  function showPreview(){ const payload = buildCampaignPayload(); S('c_preview').textContent = JSON.stringify(payload, null, 2); }
+  function showPreview(){
+    const payload = buildCampaignPayload();
+    console.log('[Prévia campanha]', payload);
+    S('c_preview').textContent = JSON.stringify(payload, null, 2);
+  }
   S('c_preview_btn').onclick = showPreview;
 
+  // ====== NOVO: integra com as rotas do backend ======
   let CURRENT_CAMPAIGN_ID = '';
 
   async function apiCreateCampaign(payload){
-    const r = await fetch('/campaigns', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
-    const j = await r.json(); if (!j.ok) throw new Error(j.error || 'Falha ao salvar campanha'); return j;
+    const r = await fetch('/campaigns', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'Falha ao salvar campanha');
+    return j; // { ok:true, id, campaign }
   }
-  async function apiStartCampaign(id){ const r = await fetch(`/campaigns/${id}/start`, { method: 'POST' }); const j = await r.json(); if (!j.ok) throw new Error(j.error || 'Falha ao iniciar campanha'); return j; }
 
-  function setLoading(btn, on){ if (!btn) return; btn.disabled = !!on; btn.dataset._originalText ??= btn.textContent; btn.textContent = on ? 'Aguarde…' : btn.dataset._originalText; }
+  async function apiStartCampaign(id){
+    const r = await fetch(`/campaigns/${id}/start`, { method: 'POST' });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'Falha ao iniciar campanha');
+    return j; // { ok:true, queued, campaign }
+  }
+
+  async function apiStopCampaign(id){
+    const r = await fetch(`/campaigns/${id}/stop`, { method: 'POST' });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'Falha ao pausar campanha');
+    return j;
+  }
+
+  function setLoading(btn, on){
+    if (!btn) return;
+    btn.disabled = !!on;
+    btn.dataset._originalText ??= btn.textContent;
+    btn.textContent = on ? 'Aguarde…' : btn.dataset._originalText;
+  }
+
+  const btnSalvarCamp = S('c_save_btn');
+  if (btnSalvarCamp) {
+    btnSalvarCamp.onclick = async () => {
+      try {
+        setLoading(btnSalvarCamp, true);
+        const payload = buildCampaignPayload();
+        const j = await apiCreateCampaign(payload);
+        CURRENT_CAMPAIGN_ID = j.id;
+        alert(`Campanha salva! ID: ${j.id}`);
+      } catch(e) {
+        console.error(e);
+        alert('Erro ao salvar a campanha.');
+      } finally {
+        setLoading(btnSalvarCamp, false);
+      }
+    };
+  }
 
   const btnSalvarIniciar = S('c_create_btn');
   if (btnSalvarIniciar) {
@@ -324,7 +463,11 @@
       try {
         setLoading(btnSalvarIniciar, true);
         const payload = buildCampaignPayload();
-        if (!CURRENT_CAMPAIGN_ID) { const j = await apiCreateCampaign(payload); CURRENT_CAMPAIGN_ID = j.id; }
+
+        if (!CURRENT_CAMPAIGN_ID) {
+          const j = await apiCreateCampaign(payload);
+          CURRENT_CAMPAIGN_ID = j.id;
+        }
         const k = await apiStartCampaign(CURRENT_CAMPAIGN_ID);
         showPreview();
         alert(`Campanha iniciada! Contatos enfileirados: ${k.queued}`);
@@ -337,6 +480,23 @@
     };
   }
 
+  const btnPausar = S('c_stop_btn');
+  if (btnPausar) {
+    btnPausar.onclick = async () => {
+      if (!CURRENT_CAMPAIGN_ID) { alert('Nenhuma campanha carregada. Salve/inicie primeiro.'); return; }
+      try {
+        setLoading(btnPausar, true);
+        await apiStopCampaign(CURRENT_CAMPAIGN_ID);
+        alert('Campanha pausada.');
+      } catch (e) {
+        console.error(e);
+        alert('Erro ao pausar a campanha.');
+      } finally {
+        setLoading(btnPausar, false);
+      }
+    };
+  }
+
   // ===== Upload da mídia do template =====
   async function uploadTemplateMedia() {
     const fileInput = S('c_tpl_media_file');
@@ -345,11 +505,19 @@
     const prevImg   = S('c_tpl_media_img');
     const prevVid   = S('c_tpl_media_video');
 
-    if (!fileInput.files || !fileInput.files[0]) { alert('Selecione um arquivo de imagem ou vídeo.'); return; }
+    if (!fileInput.files || !fileInput.files[0]) {
+      alert('Selecione um arquivo de imagem ou vídeo.');
+      return;
+    }
+
     const file = fileInput.files[0];
 
+    // limite de ~15MB (ajuste se quiser)
     const MAX = 15 * 1024 * 1024;
-    if (file.size > MAX) { alert('Arquivo muito grande. Envie até 15 MB.'); return; }
+    if (file.size > MAX) {
+      alert('Arquivo muito grande. Envie até 15 MB.');
+      return;
+    }
 
     const fd = new FormData();
     fd.append('file', file);
@@ -359,15 +527,27 @@
       const json = await res.json();
       if (!json.ok) throw new Error(json.error || 'Falha no upload');
 
-      const finalUrl = json.absolute_url || json.url; // usa absoluta se houver APP_BASE_URL
+      // Preferir absolute_url quando APP_BASE_URL estiver configurado
+      const finalUrl = json.absolute_url || json.url;
       urlInput.value = finalUrl;
 
+      // Preview
       const isImg = /\.(png|jpe?g|gif|webp)$/i.test(file.name);
       const isVid = /\.(mp4|webm|m4v|mov)$/i.test(file.name);
 
-      prevImg.style.display = 'none'; prevVid.style.display = 'none'; prevWrap.style.display = 'none';
-      if (isImg) { prevImg.src = finalUrl; prevImg.style.display = 'block'; prevWrap.style.display = 'flex'; }
-      else if (isVid) { prevVid.src = finalUrl; prevVid.style.display = 'block'; prevWrap.style.display = 'flex'; }
+      prevImg.style.display = 'none';
+      prevVid.style.display = 'none';
+      prevWrap.style.display = 'none';
+
+      if (isImg) {
+        prevImg.src = finalUrl;
+        prevImg.style.display = 'block';
+        prevWrap.style.display = 'flex';
+      } else if (isVid) {
+        prevVid.src = finalUrl;
+        prevVid.style.display = 'block';
+        prevWrap.style.display = 'flex';
+      }
 
       alert('Mídia anexada com sucesso!');
     } catch (e) {

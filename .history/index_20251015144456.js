@@ -99,22 +99,24 @@ app.post('/campaigns/run-now', async (req, res) => {
     const excludePaid = !!camp.filter?.exclude_paid;
 
     // população de destino
-    let numbers = Object.entries(CONTACTS)
-      .filter(([num, c]) => {
-        if (isOptedOut(num)) return false; // 🔕 não enviar para quem pediu descadastro
-        if (!c?.lastSeen) return false;
-        const days = (now - c.lastSeen) / (1000 * 60 * 60 * 24);
-        if (days < lastDays) return false;
-        if (excludePaid && c.purchased) return false;
-        return true;
-      })
-      .map(([num]) => num);
+    // população de destino
+let numbers = Object.entries(CONTACTS)
+  .filter(([num, c]) => {
+    if (isOptedOut(num)) return false; // 🔕 não enviar para quem pediu descadastro
+    if (!c?.lastSeen) return false;
+    const days = (now - c.lastSeen) / (1000 * 60 * 60 * 24);
+    if (days < lastDays) return false;
+    if (excludePaid && c.purchased) return false;
+    return true;
+  })
+  .map(([num]) => num);
 
-    // modo teste (envia só para um número específico)
-    if (camp.test_to && String(camp.test_to).trim()) {
-      const to = String(camp.test_to).trim();
-      numbers = [to].filter(n => !isOptedOut(n)); // respeita opt-out no teste também
-    }
+// modo teste (envia só para um número específico)
+if (camp.test_to && String(camp.test_to).trim()) {
+  const to = String(camp.test_to).trim();
+  numbers = [to].filter(n => !isOptedOut(n)); // respeita opt-out no teste também
+}
+
 
     // conteúdo
     const text24 = (camp.content?.text_24h || '').trim(); // pode estar vazio quando for template-only
@@ -131,7 +133,7 @@ app.post('/campaigns/run-now', async (req, res) => {
           const tplName   = (camp.content?.template_name || '').trim();
           const tplLang   = (camp.content?.template_lang || 'pt_BR').trim();
           const tplParams = Array.isArray(camp.content?.template_params) ? camp.content.template_params : [];
-          const tplMedia  = absolutize((camp.content?.template_media_url || '').trim());
+          const tplMedia  = (camp.content?.template_media_url || '').trim();
           const mode = camp.policy?.mode || 'auto'; // auto | only24 | onlyTemplate
 
           const lastSeen = CONTACTS[to]?.lastSeen || 0;
@@ -150,7 +152,7 @@ app.post('/campaigns/run-now', async (req, res) => {
                 mediaUrl: tplMedia || null, // header do template precisa existir para mídia
               });
 
-              // botões pós-template (AJUSTE: inclui UNSUB na campanha)
+              // opcional: botões após template
               try {
                 await sendButtons({
                   token: process.env.WHATSAPP_TOKEN,
@@ -160,7 +162,7 @@ app.post('/campaigns/run-now', async (req, res) => {
                   buttons: [
                     { id: 'CHOOSE_A', title: (CONFIG?.produtoA?.rotulo || 'Produto A').slice(0,20) },
                     { id: 'CHOOSE_B', title: (CONFIG?.produtoB?.rotulo || 'Produto B').slice(0,20) },
-                    { id: 'UNSUB',    title: 'Não receber mensagens' }
+                    { id: 'MENU',     title: 'Menu' }
                   ],
                 });
               } catch (e) {
@@ -176,9 +178,10 @@ app.post('/campaigns/run-now', async (req, res) => {
           }
 
           // === mídia opcional da campanha (vídeo ou imagem) ===
-          const mediaUrl = absolutize((camp.content?.template_media_url || '').trim());
+          const mediaUrl = (camp.content?.template_media_url || '').trim();
           if (mediaUrl) {
             try {
+              // legenda curtinha: 1ª linha da mensagem
               const caption = personalize(String(text24).split('\n')[0].slice(0, 900), to);
 
               if (looksLikeVideo(mediaUrl)) {
@@ -198,6 +201,7 @@ app.post('/campaigns/run-now', async (req, res) => {
                   caption
                 });
               } else {
+                // não é arquivo direto → enviar como link de texto
                 await sendText({
                   token: process.env.WHATSAPP_TOKEN,
                   phoneNumberId: process.env.PHONE_NUMBER_ID,
@@ -206,13 +210,14 @@ app.post('/campaigns/run-now', async (req, res) => {
                 });
               }
 
+              // pequena pausa pra mídia chegar antes do texto
               await new Promise(r => setTimeout(r, 400));
             } catch (e) {
               console.error('[campaign media] falhou', e?.response?.data || e.message);
             }
           }
 
-          // 1) texto 24h (se houver)
+          // 1) envia o texto da campanha (se existir)
           if (text24) {
             await sendText({
               token: process.env.WHATSAPP_TOKEN,
@@ -222,7 +227,7 @@ app.post('/campaigns/run-now', async (req, res) => {
             });
           }
 
-          // 2) botões (AJUSTE: campanha com UNSUB)
+          // 2) envia botões de ação (A / B / Menu)
           try {
             await sendButtons({
               token: process.env.WHATSAPP_TOKEN,
@@ -232,7 +237,7 @@ app.post('/campaigns/run-now', async (req, res) => {
               buttons: [
                 { id: 'CHOOSE_A', title: (CONFIG?.produtoA?.rotulo || 'Produto A').slice(0,20) },
                 { id: 'CHOOSE_B', title: (CONFIG?.produtoB?.rotulo || 'Produto B').slice(0,20) },
-                { id: 'UNSUB',    title: 'Não receber mensagens' }
+                { id: 'MENU',     title: 'Menu' }
               ],
             });
           } catch (e) {
@@ -417,8 +422,7 @@ app.post('/campaigns/:id/start', async (req, res) => {
     if (!text24) return res.status(400).json({ ok:false, error:'Mensagem (24h) vazia' });
 
     let numbers = Object.entries(CONTACTS)
-      .filter(([num, c]) => {
-        if (isOptedOut(num)) return false;          // 🔕 respeita descadastro
+      .filter(([_, c]) => {
         if (!c?.lastSeen) return false;
         const days = (now - c.lastSeen) / (1000*60*60*24);
         if (days < lastDays) return false;
@@ -439,43 +443,6 @@ app.post('/campaigns/:id/start', async (req, res) => {
 
       setTimeout(async () => {
         try {
-          // === mídia opcional da campanha (mesma lógica do run-now) ===
-          const mediaUrl2 = absolutize((camp.content?.template_media_url || '').trim());
-          if (mediaUrl2) {
-            try {
-              const caption2 = personalize(String(text24).split('\n')[0].slice(0, 900), to);
-
-              if (looksLikeVideo(mediaUrl2)) {
-                await sendVideo({
-                  token: process.env.WHATSAPP_TOKEN,
-                  phoneNumberId: process.env.PHONE_NUMBER_ID,
-                  to,
-                  url: mediaUrl2,
-                  caption: caption2
-                });
-              } else if (looksLikeImage(mediaUrl2)) {
-                await sendImage({
-                  token: process.env.WHATSAPP_TOKEN,
-                  phoneNumberId: process.env.PHONE_NUMBER_ID,
-                  to,
-                  url: mediaUrl2,
-                  caption: caption2
-                });
-              } else {
-                await sendText({
-                  token: process.env.WHATSAPP_TOKEN,
-                  phoneNumberId: process.env.PHONE_NUMBER_ID,
-                  to,
-                  body: `🎬 Veja: ${mediaUrl2}`
-                });
-              }
-
-              await new Promise(r => setTimeout(r, 400));
-            } catch (e) {
-              console.error('[campaign start media] falhou', e?.response?.data || e.message);
-            }
-          }
-
           await sendText({
             token: process.env.WHATSAPP_TOKEN,
             phoneNumberId: process.env.PHONE_NUMBER_ID,
@@ -483,7 +450,6 @@ app.post('/campaigns/:id/start', async (req, res) => {
             body: personalize(text24, to)
           });
 
-          // botões (AJUSTE: campanha com UNSUB)
           try {
             await sendButtons({
               token: process.env.WHATSAPP_TOKEN,
@@ -493,7 +459,7 @@ app.post('/campaigns/:id/start', async (req, res) => {
               buttons: [
                 { id: 'CHOOSE_A', title: (CONFIG?.produtoA?.rotulo || 'Produto A').slice(0,20) },
                 { id: 'CHOOSE_B', title: (CONFIG?.produtoB?.rotulo || 'Produto B').slice(0,20) },
-                { id: 'UNSUB',    title: 'Não receber mensagens' }
+                { id: 'MENU',     title: 'Menu' }
               ],
             });
           } catch (e) {
@@ -774,7 +740,7 @@ app.post('/mp/process-payment', async (req, res) => {
               registration_date: new Date().toISOString().slice(0,10)
             }
           },
-          metadata: { orderId, productKey, bumps: flags }
+          metadata: { orderId, productKey }
         };
 
         Object.keys(body).forEach(k => body[k] === undefined && delete body[k]);
@@ -802,7 +768,7 @@ app.post('/mp/process-payment', async (req, res) => {
           payer: { email: req.body?.payer?.email || 'compras@example.com' },
           binary_mode: true,
           notification_url: NOTIFY,
-          metadata: { orderId, productKey, bumps: flags }
+          metadata: { orderId, productKey }
         };
 
         const resp = await mpPayment.create({ body });
@@ -885,7 +851,7 @@ app.post('/mp/process-payment', async (req, res) => {
               federal_unit: address.federal_unit
             }
           },
-          metadata: { orderId, productKey, bumps: flags }
+          metadata: { orderId, productKey }
         };
 
         const resp = await mpPayment.create({ body });
@@ -963,72 +929,6 @@ app.get('/mp/checkout', async (req, res) => {
     return res.status(500).send('Falha ao redirecionar para Mercado Pago');
   }
 });
-
-// ===== helper de entrega (produto/bumps) =====
-async function sendDeliveryItem(to, titulo, entrega = {}, prefix = '') {
-  const ent = {
-    pdf_url:   entrega.pdf_url   ? absolutize(entrega.pdf_url)   : '',
-    video_url: entrega.video_url ? absolutize(entrega.video_url) : '',
-    link_url:  entrega.link_url  ? absolutize(entrega.link_url)  : ''
-  };
-  const tag = prefix ? `${prefix} ` : '';
-
-  // aviso/recibo
-  await sendText({
-    token: process.env.WHATSAPP_TOKEN,
-    phoneNumberId: process.env.PHONE_NUMBER_ID,
-    to,
-    body:
-      `✅ ${tag}${titulo}\n` +
-      (ent.link_url  ? `🔗 Link: ${ent.link_url}\n`  : '') +
-      (ent.pdf_url   ? `📄 PDF: ${ent.pdf_url}\n`   : '') +
-      (ent.video_url ? `🎬 Vídeo: ${ent.video_url}\n` : '')
-  });
-
-  if (ent.pdf_url) {
-    try {
-      await sendDocument({
-        token: process.env.WHATSAPP_TOKEN,
-        phoneNumberId: process.env.PHONE_NUMBER_ID,
-        to,
-        url: ent.pdf_url,
-        filename: `${(titulo || 'arquivo').replace(/\s+/g,'_')}.pdf`
-      });
-    } catch (e) { console.warn('[delivery/pdf] falhou:', e?.response?.data || e.message); }
-  }
-
-  if (ent.video_url) {
-    try {
-      if (/\.(mp4|mov|m4v|webm)$/i.test(ent.video_url)) {
-        await sendVideo({
-          token: process.env.WHATSAPP_TOKEN,
-          phoneNumberId: process.env.PHONE_NUMBER_ID,
-          to,
-          url: ent.video_url,
-          caption: `🎬 Vídeo — ${titulo}`
-        });
-      } else {
-        await sendText({
-          token: process.env.WHATSAPP_TOKEN,
-          phoneNumberId: process.env.PHONE_NUMBER_ID,
-          to,
-          body: `🎬 Assista aqui: ${ent.video_url}`
-        });
-      }
-    } catch (e) { console.warn('[delivery/video] falhou:', e?.response?.data || e.message); }
-  }
-
-  if (ent.link_url) {
-    try {
-      await sendText({
-        token: process.env.WHATSAPP_TOKEN,
-        phoneNumberId: process.env.PHONE_NUMBER_ID,
-        to,
-        body: `🔐 Acesse novamente quando quiser: ${ent.link_url}`
-      });
-    } catch (e) { console.warn('[delivery/link] falhou:', e?.response?.data || e.message); }
-  }
-}
 
 // ===== Mercado Pago webhook: envia entrega quando APROVADO =====
 async function handleMpWebhook(req, res) {
@@ -1124,37 +1024,54 @@ async function handleMpWebhook(req, res) {
       console.warn('[MP WEBHOOK] falhou ao salvar contato (purchased=true):', e.message);
     }
 
-    // === entrega do produto principal + bumps comprados ===
+    // envia os itens de entrega
     const prod   = CONFIG[`produto${key}`] || {};
+    const ent    = prod.entrega || {};
     const titulo = prod.titulo || `Produto ${key}`;
 
-    // extrai bumps comprados do metadata
-    const mdBumps = (p.metadata?.bumps && typeof p.metadata.bumps === 'object') ? p.metadata.bumps : {};
-    const bumpsArr = Array.isArray(prod.bumps) ? prod.bumps : [];
-    const boughtBumps = bumpsArr.filter(b =>
-      b && (mdBumps[b.id] || mdBumps[String(b.id)] || mdBumps[b.titulo])
-    );
-
-    // recibo geral
     await sendText({
       token: process.env.WHATSAPP_TOKEN,
       phoneNumberId: process.env.PHONE_NUMBER_ID,
       to,
-      body:
-        `✅ Pagamento aprovado!\n\n` +
-        `📦 Produto: ${titulo}\n` +
-        (boughtBumps.length ? `➕ Bumps: ${boughtBumps.map(b=>b.titulo||b.id).join(', ')}\n\n` : `\n`) +
-        `Enviarei abaixo seus acessos.`
+      body: `✅ Pagamento aprovado!\n\n📦 ${titulo}\nObrigado pela compra! Abaixo estão os seus acessos/arquivos.`
     });
 
-    // produto principal
-    await sendDeliveryItem(to, titulo, prod.entrega || {}, '');
+    if (ent.pdf_url) {
+      await sendDocument({
+        token: process.env.WHATSAPP_TOKEN,
+        phoneNumberId: process.env.PHONE_NUMBER_ID,
+        to,
+        url: ent.pdf_url,
+        filename: `${(titulo || 'arquivo').replace(/\s+/g,'_')}.pdf`
+      });
+    }
 
-    // bumps (cada um com prefixo)
-    for (let i = 0; i < boughtBumps.length; i++) {
-      const b = boughtBumps[i];
-      const prefix = `Bump #${i+1}`;
-      await sendDeliveryItem(to, b.titulo || `Bump ${i+1}`, b.entrega || {}, prefix);
+    if (ent.video_url) {
+      if (/\.(mp4|mov|m4v)$/i.test(ent.video_url)) {
+        await sendVideo({
+          token: process.env.WHATSAPP_TOKEN,
+          phoneNumberId: process.env.PHONE_NUMBER_ID,
+          to,
+          url: ent.video_url,
+          caption: `🎬 Vídeo do ${titulo}`
+        });
+      } else {
+        await sendText({
+          token: process.env.WHATSAPP_TOKEN,
+          phoneNumberId: process.env.PHONE_NUMBER_ID,
+          to,
+          body: `🎬 Acesse o vídeo: ${ent.video_url}`
+        });
+      }
+    }
+
+    if (ent.link_url) {
+      await sendText({
+        token: process.env.WHATSAPP_TOKEN,
+        phoneNumberId: process.env.PHONE_NUMBER_ID,
+        to,
+        body: `🔗 Link de acesso: ${ent.link_url}`
+      });
     }
 
     if (CONFIG.whatsapp_suporte) {
@@ -1183,11 +1100,10 @@ async function sendGreeting(to, name) {
       phoneNumberId: process.env.PHONE_NUMBER_ID,
       to,
       body,
-      // AJUSTE: saudação com MENU (sem UNSUB aqui)
       buttons: [
         { id: 'CHOOSE_A', title: CONFIG?.produtoA?.rotulo || 'Produto A' },
         { id: 'CHOOSE_B', title: CONFIG?.produtoB?.rotulo || 'Produto B' },
-        { id: 'MENU',     title: 'Menu' }
+        { id: 'MENU',     title: 'Menu' },
       ],
     });
   } catch (e) {
@@ -1226,7 +1142,7 @@ function buildGreeting(name = '') {
   return body;
 }
 
-// ======= AJUSTE: oferta inclui texto persuasivo curto + botões =======
+// ======= AJUSTE: oferta inclui texto persuasivo curto + botão "Voltar" =======
 async function sendOffer(to, product, orderId) {
   let link;
   const urlTpl = String(product?.checkout_url || '').trim();
@@ -1249,7 +1165,7 @@ async function sendOffer(to, product, orderId) {
   const title   = product?.titulo || 'Oferta';
   const price   = product?.preco  || '';
   const suporte = CONFIG.whatsapp_suporte || '';
-  const pers    = shortPersuasive(CONFIG.texto, 240);
+  const pers    = shortPersuasive(CONFIG.texto, 240); // usa Texto persuasivo encurtado
 
   const body =
     `📦 ${title}\n` +
@@ -1259,12 +1175,7 @@ async function sendOffer(to, product, orderId) {
     (link  ? `👉 Pague no link seguro:\n${link}\n\n` : '\n') +
     (suporte ? `📞 Suporte: ${suporte}` : '');
 
-  await sendText({
-    token: process.env.WHATSAPP_TOKEN,
-    phoneNumberId: process.env.PHONE_NUMBER_ID,
-    to,
-    body
-  });
+  await sendText({ token: process.env.WHATSAPP_TOKEN, phoneNumberId: process.env.PHONE_NUMBER_ID, to, body });
 
   try {
     await sendButtons({
@@ -1272,10 +1183,7 @@ async function sendOffer(to, product, orderId) {
       phoneNumberId: process.env.PHONE_NUMBER_ID,
       to,
       body: '⬅️ Voltar ao menu',
-      buttons: [
-        { id: 'MENU',  title: 'Voltar ao menu' },
-        { id: 'UNSUB', title: 'Não receber mensagens' }
-      ],
+      buttons: [{ id: 'MENU', title: 'Menu' }],
     });
   } catch (e) {
     console.error('[sendOffer buttons] erro:', e?.response?.data || e.message);
@@ -1477,84 +1385,22 @@ app.post('/webhook', (req, res) => {
         if (wa_id_norm) logEvent({ type: 'message_in', wa_id: wa_id_norm });
       } catch {}
 
-      // ====== BOTÕES INTERACTIVE ======
       if (msg.type === 'interactive' && msg.interactive?.type === 'button_reply') {
         const payload = String(msg.interactive.button_reply.id || '').toUpperCase();
-
-        if (payload === 'UNSUB') {
-          markOptOut(to);
-          await sendText({
-            token: process.env.WHATSAPP_TOKEN,
-            phoneNumberId: process.env.PHONE_NUMBER_ID,
-            to,
-            body: 'Você não receberá mais nossas campanhas. Se mudar de ideia, responda "quero receber".'
-          });
-          return;
-        }
-
         if (payload === 'CHOOSE_A') { const orderId = makeOrderId(); await sendOffer(to, CONFIG.produtoA, orderId); return; }
         if (payload === 'CHOOSE_B') { const orderId = makeOrderId(); await sendOffer(to, CONFIG.produtoB, orderId); return; }
         if (payload === 'MENU')     { s.stage = 'waiting_choice'; await sendGreeting(to, name); return; }
       }
 
-      // ====== BOTÕES (fallback de plataforma) ======
       if (msg.type === 'button' && msg?.button?.payload) {
         const payload = String(msg.button.payload || '').toUpperCase();
-
-        if (payload === 'UNSUB') {
-          markOptOut(to);
-          await sendText({
-            token: process.env.WHATSAPP_TOKEN,
-            phoneNumberId: process.env.PHONE_NUMBER_ID,
-            to,
-            body: 'Descadastro realizado. Você não receberá mais campanhas.'
-          });
-          return;
-        }
-
         if (payload === 'CHOOSE_A') { const orderId = makeOrderId(); await sendOffer(to, CONFIG.produtoA, orderId); return; }
         if (payload === 'CHOOSE_B') { const orderId = makeOrderId(); await sendOffer(to, CONFIG.produtoB, orderId); return; }
         if (payload === 'MENU')     { s.stage = 'waiting_choice'; await sendGreeting(to, name); return; }
       }
 
-      // ====== TEXTO ======
       if (msg.type === 'text') {
         const textIn = human(msg.text?.body).toLowerCase();
-
-        // 🔕 DESCADASTRO por texto
-        if ([
-          'parar','sair','cancelar','stop','unsubscribe',
-          'não quero receber','nao quero receber','não receber','nao receber',
-          'descadastrar','remover'
-        ].some(k => textIn.includes(k))) {
-          markOptOut(to);
-          await sendText({
-            token: process.env.WHATSAPP_TOKEN,
-            phoneNumberId: process.env.PHONE_NUMBER_ID,
-            to,
-            body: 'Ok, removi você da nossa lista. Para voltar a receber, responda "quero receber".'
-          });
-          return;
-        }
-
-        // 🔔 REATIVAÇÃO por texto (opcional)
-        if (['quero receber','voltar a receber','assinar','reativar'].some(k => textIn.includes(k))) {
-          if (!CONTACTS[to]) CONTACTS[to] = { name:'', lastSeen: Date.now(), purchased: false };
-          CONTACTS[to].opt_out = false; 
-          saveContacts();
-          try {
-            const wa = normPhone(msg.from);
-            let l = LEADS.find(x => x.wa_id === wa);
-            if (l) { l.opt_in_marketing = true; saveLeads(); }
-          } catch {}
-          await sendText({
-            token: process.env.WHATSAPP_TOKEN,
-            phoneNumberId: process.env.PHONE_NUMBER_ID,
-            to,
-            body: 'Perfeito! Você voltará a receber nossas ofertas.'
-          });
-          return;
-        }
 
         if (['reset','reiniciar','recomeçar','inicio','início'].includes(textIn)) {
           sessions.delete(msg.from);
@@ -1591,7 +1437,6 @@ app.post('/webhook', (req, res) => {
         });
         return;
       }
-
     } catch (e) {
       console.error('[WEBHOOK] erro:', e?.response?.data || e.message);
     }

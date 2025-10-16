@@ -97,69 +97,35 @@ async function sendVideo({ token, phoneNumberId, to, url, caption }) {
   return data;
 }
 
-/** Envia imagem por URL (JPG/PNG/WEBP/GIF) com legenda opcional */
-async function sendImage({ token, phoneNumberId, to, url, caption }) {
-  if (!url) throw new Error('sendImage: url é obrigatório');
-  const api = waClient({ token, phoneNumberId });
-  const payload = {
-    messaging_product: 'whatsapp',
-    to,
-    type: 'image',
-    image: {
-      link: url,
-      caption: caption ? String(caption).slice(0, 1024) : undefined,
-    },
-  };
-  const { data } = await api.post('', payload);
-  return data;
-}
-
-/** Envia TEMPLATE (HSM) com parâmetros e header de mídia opcional */
-async function sendTemplate({ token, phoneNumberId, to, name, lang = 'pt_BR', params = [], mediaUrl = null }) {
-  if (!name) throw new Error('sendTemplate: name é obrigatório');
-  const api = waClient({ token, phoneNumberId });
-
-  const components = [];
-
-  // Header com mídia opcional (imagem/vídeo) — precisa existir no template
-  if (mediaUrl) {
-    let headerParam = null;
-    if (/\.(mp4|m4v|mov|webm)$/i.test(mediaUrl)) {
-      headerParam = { type: 'video', video: { link: mediaUrl } };
-    } else if (/\.(png|jpe?g|gif|webp)$/i.test(mediaUrl)) {
-      headerParam = { type: 'image', image: { link: mediaUrl } };
-    }
-    if (headerParam) components.push({ type: 'header', parameters: [headerParam] });
-  }
-
-  // Body params ({{1}}, {{2}}, ...)
-  if (Array.isArray(params) && params.length) {
-    components.push({
-      type: 'body',
-      parameters: params.map(p => ({ type: 'text', text: String(p) }))
-    });
-  }
-
-  const payload = {
-    messaging_product: 'whatsapp',
-    to,
-    type: 'template',
-    template: {
-      name,
-      language: { code: lang },
-      components
-    }
-  };
-
-  const { data } = await api.post('', payload);
-  return data;
-}
-
 module.exports = {
   sendText,
   sendButtons,
   sendDocument,
   sendVideo,
+};
+
+// ...
+async function sendImage({ token, phoneNumberId, to, url, caption }) {
+  const body = {
+    messaging_product: "whatsapp",
+    to,
+    type: "image",
+    image: { link: url, caption }
+  };
+  const r = await axios.post(
+    `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`,
+    body,
+    { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+  );
+  return r.data;
+}
+
+module.exports = {
+  // já existentes:
+  sendText,
+  sendButtons,
+  sendDocument,
+  sendVideo,
+  // novo:
   sendImage,
-  sendTemplate, // <— novo
 };

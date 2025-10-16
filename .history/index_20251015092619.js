@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 
-const { sendText, sendButtons, sendDocument, sendVideo, sendImage, sendTemplate } = require('./phone');
+const { sendText, sendButtons, sendDocument, sendVideo } = require('./phone');
 
 const app = express();
 app.use(express.json());
@@ -30,51 +30,6 @@ let CONTACTS = {}; // { "+5565...": { name, lastSeen, purchased } }
 try { if (fs.existsSync(CONTACTS_PATH)) CONTACTS = JSON.parse(fs.readFileSync(CONTACTS_PATH,'utf8')); } catch {}
 const saveContacts = () => fs.writeFileSync(CONTACTS_PATH, JSON.stringify(CONTACTS,null,2));
 
-// ===== Opt-out (descadastro) e helpers de mídia =====
-function isOptedOut(num) {
-  const c = CONTACTS[num];
-  if (c && c.opt_out === true) return true;
-  try {
-    const wa = normPhone(num);
-    if (typeof LEADS !== 'undefined' && Array.isArray(LEADS)) {
-      const l = LEADS.find(x => x.wa_id === wa);
-      if (l && l.opt_in_marketing === false) return true;
-    }
-  } catch {}
-  return false;
-}
-
-function markOptOut(num) {
-  if (!CONTACTS[num]) CONTACTS[num] = { name:'', lastSeen:0, purchased:false };
-  CONTACTS[num].opt_out = true;
-  saveContacts();
-  try {
-    const wa = normPhone(num);
-    if (typeof LEADS !== 'undefined' && Array.isArray(LEADS)) {
-      let l = LEADS.find(x => x.wa_id === wa);
-      if (!l) {
-        l = { wa_id: wa, name: '', last_incoming_at: new Date().toISOString(), last_outgoing_at: null, comprou: false, opt_in_marketing: false };
-        LEADS.push(l);
-      } else {
-        l.opt_in_marketing = false;
-      }
-      saveLeads && saveLeads();
-    }
-  } catch {}
-}
-
-function absolutize(url) {
-  url = String(url || '').trim();
-  if (!url) return url;
-  if (/^https?:\/\//i.test(url)) return url;
-  const base = (process.env.APP_BASE_URL || '').replace(/\/+$/, '');
-  if (!base) return url;
-  return url.startsWith('/') ? base + url : `${base}/${url}`;
-}
-function looksLikeImage(u) { return /\.(png|jpe?g|gif|webp)$/i.test(String(u||'')); }
-function looksLikeVideo(u) { return /\.(mp4|m4v|mov|webm)$/i.test(String(u||'')); }
-
-
 // salva campanha atual
 app.post('/campaigns/save', (req, res) => {
   try {
@@ -87,7 +42,7 @@ app.post('/campaigns/save', (req, res) => {
   }
 });
 
-// roda campanha agora (modo simples texto dentro de 24h) — agora com TEMPLATE opcional
+// roda campanha agora (modo simples texto dentro de 24h)
 app.post('/campaigns/run-now', async (req, res) => {
   try {
     const camp = fs.existsSync(CAMPAIGN_PATH) ? JSON.parse(fs.readFileSync(CAMPAIGN_PATH,'utf8')) : (req.body||{});
@@ -101,9 +56,8 @@ app.post('/campaigns/run-now', async (req, res) => {
     // população de destino
     let numbers = Object.entries(CONTACTS)
       .filter(([num, c]) => {
-        if (isOptedOut(num)) return false; // 🔕 não enviar para quem pediu descadastro
         if (!c?.lastSeen) return false;
-        const days = (now - c.lastSeen) / (1000 * 60 * 60 * 24);
+        const days = (now - c.lastSeen) / (1000*60*60*24);
         if (days < lastDays) return false;
         if (excludePaid && c.purchased) return false;
         return true;
@@ -112,117 +66,29 @@ app.post('/campaigns/run-now', async (req, res) => {
 
     // modo teste (envia só para um número específico)
     if (camp.test_to && String(camp.test_to).trim()) {
-      const to = String(camp.test_to).trim();
-      numbers = [to].filter(n => !isOptedOut(n)); // respeita opt-out no teste também
+      numbers = [ String(camp.test_to).trim() ];
     }
 
-    // conteúdo
-    const text24 = (camp.content?.text_24h || '').trim(); // pode estar vazio quando for template-only
+    // respeita janela: apenas texto livre (dentro de 24h)
+    const text24 = (camp.content?.text_24h || '').trim();
+    if (!text24) return res.status(400).json({ ok:false, error:'Mensagem (24h) vazia' });
 
     // dispara com intervalos aleatórios
     let delay = 0;
     numbers.forEach((to) => {
       const jitter = (Math.random()*(maxS-minS)+minS)*1000;
       delay += jitter;
-
       setTimeout(async () => {
         try {
-          // ==== TEMPLATE (HSM) quando apropriado ====
-          const tplName   = (camp.content?.template_name || '').trim();
-          const tplLang   = (camp.content?.template_lang || 'pt_BR').trim();
-          const tplParams = Array.isArray(camp.content?.template_params) ? camp.content.template_params : [];
-          const tplMedia  = absolutize((camp.content?.template_media_url || '').trim());
-          const mode = camp.policy?.mode || 'auto'; // auto | only24 | onlyTemplate
+          // 1) envia o texto da campanha
+          await sendText({
+            token: process.env.WHATSAPP_TOKEN,
+            phoneNumberId: process.env.PHONE_NUMBER_ID,
+            to,
+            body: personalize(text24, to)
+          });
 
-          const lastSeen = CONTACTS[to]?.lastSeen || 0;
-          const outside24h = (Date.now() - lastSeen) > (24*60*60*1000);
-          const useTemplate = (mode === 'onlyTemplate') || (mode === 'auto' && outside24h);
-
-          if (useTemplate && tplName) {
-            try {
-              await sendTemplate({
-                token: process.env.WHATSAPP_TOKEN,
-                phoneNumberId: process.env.PHONE_NUMBER_ID,
-                to,
-                name: tplName,
-                lang: tplLang,
-                params: tplParams,
-                mediaUrl: tplMedia || null, // header do template precisa existir para mídia
-              });
-
-              // botões pós-template (AJUSTE: inclui UNSUB na campanha)
-              try {
-                await sendButtons({
-                  token: process.env.WHATSAPP_TOKEN,
-                  phoneNumberId: process.env.PHONE_NUMBER_ID,
-                  to,
-                  body: 'Escolha uma opção:',
-                  buttons: [
-                    { id: 'CHOOSE_A', title: (CONFIG?.produtoA?.rotulo || 'Produto A').slice(0,20) },
-                    { id: 'CHOOSE_B', title: (CONFIG?.produtoB?.rotulo || 'Produto B').slice(0,20) },
-                    { id: 'UNSUB',    title: 'Não receber mensagens' }
-                  ],
-                });
-              } catch (e) {
-                console.error('[campaign buttons] falhou', e?.response?.data || e.message);
-              }
-
-              console.log('[campaign/template] enviado para', to);
-              return; // encerra — já enviou template (+ botões)
-            } catch (e) {
-              console.error('[campaign template] falhou', e?.response?.data || e.message);
-              // continua no fallback: mídia + texto + botões
-            }
-          }
-
-          // === mídia opcional da campanha (vídeo ou imagem) ===
-          const mediaUrl = absolutize((camp.content?.template_media_url || '').trim());
-          if (mediaUrl) {
-            try {
-              const caption = personalize(String(text24).split('\n')[0].slice(0, 900), to);
-
-              if (looksLikeVideo(mediaUrl)) {
-                await sendVideo({
-                  token: process.env.WHATSAPP_TOKEN,
-                  phoneNumberId: process.env.PHONE_NUMBER_ID,
-                  to,
-                  url: mediaUrl,
-                  caption
-                });
-              } else if (looksLikeImage(mediaUrl)) {
-                await sendImage({
-                  token: process.env.WHATSAPP_TOKEN,
-                  phoneNumberId: process.env.PHONE_NUMBER_ID,
-                  to,
-                  url: mediaUrl,
-                  caption
-                });
-              } else {
-                await sendText({
-                  token: process.env.WHATSAPP_TOKEN,
-                  phoneNumberId: process.env.PHONE_NUMBER_ID,
-                  to,
-                  body: `🎬 Veja: ${mediaUrl}`
-                });
-              }
-
-              await new Promise(r => setTimeout(r, 400));
-            } catch (e) {
-              console.error('[campaign media] falhou', e?.response?.data || e.message);
-            }
-          }
-
-          // 1) texto 24h (se houver)
-          if (text24) {
-            await sendText({
-              token: process.env.WHATSAPP_TOKEN,
-              phoneNumberId: process.env.PHONE_NUMBER_ID,
-              to,
-              body: personalize(text24, to)
-            });
-          }
-
-          // 2) botões (AJUSTE: campanha com UNSUB)
+          // 2) envia botões de ação (A / B / Menu)
           try {
             await sendButtons({
               token: process.env.WHATSAPP_TOKEN,
@@ -232,7 +98,7 @@ app.post('/campaigns/run-now', async (req, res) => {
               buttons: [
                 { id: 'CHOOSE_A', title: (CONFIG?.produtoA?.rotulo || 'Produto A').slice(0,20) },
                 { id: 'CHOOSE_B', title: (CONFIG?.produtoB?.rotulo || 'Produto B').slice(0,20) },
-                { id: 'UNSUB',    title: 'Não receber mensagens' }
+                { id: 'MENU',     title: 'Menu' }
               ],
             });
           } catch (e) {
@@ -362,166 +228,6 @@ let CAMPAIGNS = readJsonSafe(CAMPAIGNS_PATH, []); // [{ id, name, created_at, st
 function saveLeads() { writeJsonSafe(LEADS_PATH, LEADS); }
 function saveCampaigns() { writeJsonSafe(CAMPAIGNS_PATH, CAMPAIGNS); }
 
-// ===== Rotas novas p/ Campanhas (compatíveis com o painel) ==================
-
-// helper: encontra campanha por id
-function findCampaign(id) {
-  return CAMPAIGNS.find(c => c.id === id);
-}
-
-// cria campanha (usada pelo painel)
-app.post('/campaigns', (req, res) => {
-  try {
-    const p = req.body || {};
-    const id = 'CAMP-' + Date.now().toString(36).toUpperCase();
-
-    const camp = {
-      id,
-      name: p.name || 'Campanha',
-      created_at: new Date().toISOString(),
-      start_at: p.start_at || null,
-      status: 'draft', // draft | running | paused | done
-      filter: p.filter || { last_incoming_gte_days: 0, exclude_paid: false },
-      policy: p.policy || {
-        mode: 'only24',
-        throttle_seconds_min: 60,
-        throttle_seconds_max: 150
-      },
-      content: p.content || { text_24h: '' },
-      test_to: (p.test_to || '').trim() || null,
-      stats: { queued: 0, sent: 0, errors: 0 }
-    };
-
-    CAMPAIGNS.push(camp);
-    saveCampaigns();
-    return res.json({ ok: true, id: camp.id, campaign: camp });
-  } catch (e) {
-    console.error('[campaigns:create]', e.message);
-    return res.status(500).json({ ok:false, error:'Falha ao criar campanha' });
-  }
-});
-
-// inicia campanha (enfileira os envios agora) — mantida SEM alterar lógica original
-app.post('/campaigns/:id/start', async (req, res) => {
-  try {
-    const camp = findCampaign(req.params.id);
-    if (!camp) return res.status(404).json({ ok:false, error:'Campanha não encontrada' });
-
-    const now = Date.now();
-    const minS = Math.max(0, Number(camp.policy?.throttle_seconds_min ?? 60));
-    const maxS = Math.max(minS, Number(camp.policy?.throttle_seconds_max ?? 150));
-    const lastDays = Number(camp.filter?.last_incoming_gte_days || 0);
-    const excludePaid = !!camp.filter?.exclude_paid;
-
-    const text24 = String(camp.content?.text_24h || '').trim();
-    if (!text24) return res.status(400).json({ ok:false, error:'Mensagem (24h) vazia' });
-
-    let numbers = Object.entries(CONTACTS)
-      .filter(([num, c]) => {
-        if (isOptedOut(num)) return false;          // 🔕 respeita descadastro
-        if (!c?.lastSeen) return false;
-        const days = (now - c.lastSeen) / (1000*60*60*24);
-        if (days < lastDays) return false;
-        if (excludePaid && c.purchased) return false;
-        return true;
-      })
-      .map(([num]) => num);
-
-    if (camp.test_to && String(camp.test_to).trim()) {
-      const toNorm = String(camp.test_to).replace(/\D/g,'');
-      numbers = toNorm ? [`+${toNorm}`] : [];
-    }
-
-    let delay = 0;
-    numbers.forEach((to) => {
-      const jitter = (Math.random()*(maxS-minS)+minS)*1000;
-      delay += jitter;
-
-      setTimeout(async () => {
-        try {
-          // === mídia opcional da campanha (mesma lógica do run-now) ===
-          const mediaUrl2 = absolutize((camp.content?.template_media_url || '').trim());
-          if (mediaUrl2) {
-            try {
-              const caption2 = personalize(String(text24).split('\n')[0].slice(0, 900), to);
-
-              if (looksLikeVideo(mediaUrl2)) {
-                await sendVideo({
-                  token: process.env.WHATSAPP_TOKEN,
-                  phoneNumberId: process.env.PHONE_NUMBER_ID,
-                  to,
-                  url: mediaUrl2,
-                  caption: caption2
-                });
-              } else if (looksLikeImage(mediaUrl2)) {
-                await sendImage({
-                  token: process.env.WHATSAPP_TOKEN,
-                  phoneNumberId: process.env.PHONE_NUMBER_ID,
-                  to,
-                  url: mediaUrl2,
-                  caption: caption2
-                });
-              } else {
-                await sendText({
-                  token: process.env.WHATSAPP_TOKEN,
-                  phoneNumberId: process.env.PHONE_NUMBER_ID,
-                  to,
-                  body: `🎬 Veja: ${mediaUrl2}`
-                });
-              }
-
-              await new Promise(r => setTimeout(r, 400));
-            } catch (e) {
-              console.error('[campaign start media] falhou', e?.response?.data || e.message);
-            }
-          }
-
-          await sendText({
-            token: process.env.WHATSAPP_TOKEN,
-            phoneNumberId: process.env.PHONE_NUMBER_ID,
-            to,
-            body: personalize(text24, to)
-          });
-
-          // botões (AJUSTE: campanha com UNSUB)
-          try {
-            await sendButtons({
-              token: process.env.WHATSAPP_TOKEN,
-              phoneNumberId: process.env.PHONE_NUMBER_ID,
-              to,
-              body: 'Escolha uma opção:',
-              buttons: [
-                { id: 'CHOOSE_A', title: (CONFIG?.produtoA?.rotulo || 'Produto A').slice(0,20) },
-                { id: 'CHOOSE_B', title: (CONFIG?.produtoB?.rotulo || 'Produto B').slice(0,20) },
-                { id: 'UNSUB',    title: 'Não receber mensagens' }
-              ],
-            });
-          } catch (e) {
-            console.error('[campaign buttons] falhou', e?.response?.data || e.message);
-          }
-
-          camp.stats.sent += 1;
-          saveCampaigns();
-          console.log('[campaign start] enviado para', to);
-        } catch (e) {
-          camp.stats.errors += 1;
-          saveCampaigns();
-          console.error('[campaign start] falha', to, e?.response?.data || e.message);
-        }
-      }, delay);
-    });
-
-    camp.status = 'running';
-    camp.stats.queued += numbers.length;
-    saveCampaigns();
-
-    return res.json({ ok:true, queued: numbers.length, campaign: camp });
-  } catch (e) {
-    console.error('[campaigns:start]', e.message);
-    return res.status(500).json({ ok:false, error:'Falha ao iniciar campanha' });
-  }
-});
-
 // normaliza telefone em E.164 (assume Brasil quando vier só dígitos)
 function normPhone(raw='') {
   const d = String(raw).replace(/\D/g, '');
@@ -582,9 +288,6 @@ function buildProductText(productKey, orderId) {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-function looksLikeImage(u) { return /\.(png|jpe?g|gif|webp)$/i.test(String(u||'')); }
-function looksLikeVideo(u) { return /\.(mp4|m4v|mov|webm)$/i.test(String(u||'')); }
-
 // Encurta o texto persuasivo para ficar leve (máx ~240 chars)
 function shortPersuasive(text, max = 240) {
   const t = String(text || '').replace(/\s+/g, ' ').trim();
@@ -605,6 +308,7 @@ function detectPaymentMethod(p) {
   if (typ.includes('card')) return 'cartao';               // crédito/débito
   return 'outro';
 }
+
 
 // =================== MERCADO PAGO (Payments/Checkout Pro) ====================
 const { MercadoPagoConfig, Preference, Payment } = require('mercadopago');
@@ -774,7 +478,7 @@ app.post('/mp/process-payment', async (req, res) => {
               registration_date: new Date().toISOString().slice(0,10)
             }
           },
-          metadata: { orderId, productKey, bumps: flags }
+          metadata: { orderId, productKey }
         };
 
         Object.keys(body).forEach(k => body[k] === undefined && delete body[k]);
@@ -802,7 +506,7 @@ app.post('/mp/process-payment', async (req, res) => {
           payer: { email: req.body?.payer?.email || 'compras@example.com' },
           binary_mode: true,
           notification_url: NOTIFY,
-          metadata: { orderId, productKey, bumps: flags }
+          metadata: { orderId, productKey }
         };
 
         const resp = await mpPayment.create({ body });
@@ -885,7 +589,7 @@ app.post('/mp/process-payment', async (req, res) => {
               federal_unit: address.federal_unit
             }
           },
-          metadata: { orderId, productKey, bumps: flags }
+          metadata: { orderId, productKey }
         };
 
         const resp = await mpPayment.create({ body });
@@ -963,72 +667,6 @@ app.get('/mp/checkout', async (req, res) => {
     return res.status(500).send('Falha ao redirecionar para Mercado Pago');
   }
 });
-
-// ===== helper de entrega (produto/bumps) =====
-async function sendDeliveryItem(to, titulo, entrega = {}, prefix = '') {
-  const ent = {
-    pdf_url:   entrega.pdf_url   ? absolutize(entrega.pdf_url)   : '',
-    video_url: entrega.video_url ? absolutize(entrega.video_url) : '',
-    link_url:  entrega.link_url  ? absolutize(entrega.link_url)  : ''
-  };
-  const tag = prefix ? `${prefix} ` : '';
-
-  // aviso/recibo
-  await sendText({
-    token: process.env.WHATSAPP_TOKEN,
-    phoneNumberId: process.env.PHONE_NUMBER_ID,
-    to,
-    body:
-      `✅ ${tag}${titulo}\n` +
-      (ent.link_url  ? `🔗 Link: ${ent.link_url}\n`  : '') +
-      (ent.pdf_url   ? `📄 PDF: ${ent.pdf_url}\n`   : '') +
-      (ent.video_url ? `🎬 Vídeo: ${ent.video_url}\n` : '')
-  });
-
-  if (ent.pdf_url) {
-    try {
-      await sendDocument({
-        token: process.env.WHATSAPP_TOKEN,
-        phoneNumberId: process.env.PHONE_NUMBER_ID,
-        to,
-        url: ent.pdf_url,
-        filename: `${(titulo || 'arquivo').replace(/\s+/g,'_')}.pdf`
-      });
-    } catch (e) { console.warn('[delivery/pdf] falhou:', e?.response?.data || e.message); }
-  }
-
-  if (ent.video_url) {
-    try {
-      if (/\.(mp4|mov|m4v|webm)$/i.test(ent.video_url)) {
-        await sendVideo({
-          token: process.env.WHATSAPP_TOKEN,
-          phoneNumberId: process.env.PHONE_NUMBER_ID,
-          to,
-          url: ent.video_url,
-          caption: `🎬 Vídeo — ${titulo}`
-        });
-      } else {
-        await sendText({
-          token: process.env.WHATSAPP_TOKEN,
-          phoneNumberId: process.env.PHONE_NUMBER_ID,
-          to,
-          body: `🎬 Assista aqui: ${ent.video_url}`
-        });
-      }
-    } catch (e) { console.warn('[delivery/video] falhou:', e?.response?.data || e.message); }
-  }
-
-  if (ent.link_url) {
-    try {
-      await sendText({
-        token: process.env.WHATSAPP_TOKEN,
-        phoneNumberId: process.env.PHONE_NUMBER_ID,
-        to,
-        body: `🔐 Acesse novamente quando quiser: ${ent.link_url}`
-      });
-    } catch (e) { console.warn('[delivery/link] falhou:', e?.response?.data || e.message); }
-  }
-}
 
 // ===== Mercado Pago webhook: envia entrega quando APROVADO =====
 async function handleMpWebhook(req, res) {
@@ -1124,37 +762,54 @@ async function handleMpWebhook(req, res) {
       console.warn('[MP WEBHOOK] falhou ao salvar contato (purchased=true):', e.message);
     }
 
-    // === entrega do produto principal + bumps comprados ===
+    // envia os itens de entrega
     const prod   = CONFIG[`produto${key}`] || {};
+    const ent    = prod.entrega || {};
     const titulo = prod.titulo || `Produto ${key}`;
 
-    // extrai bumps comprados do metadata
-    const mdBumps = (p.metadata?.bumps && typeof p.metadata.bumps === 'object') ? p.metadata.bumps : {};
-    const bumpsArr = Array.isArray(prod.bumps) ? prod.bumps : [];
-    const boughtBumps = bumpsArr.filter(b =>
-      b && (mdBumps[b.id] || mdBumps[String(b.id)] || mdBumps[b.titulo])
-    );
-
-    // recibo geral
     await sendText({
       token: process.env.WHATSAPP_TOKEN,
       phoneNumberId: process.env.PHONE_NUMBER_ID,
       to,
-      body:
-        `✅ Pagamento aprovado!\n\n` +
-        `📦 Produto: ${titulo}\n` +
-        (boughtBumps.length ? `➕ Bumps: ${boughtBumps.map(b=>b.titulo||b.id).join(', ')}\n\n` : `\n`) +
-        `Enviarei abaixo seus acessos.`
+      body: `✅ Pagamento aprovado!\n\n📦 ${titulo}\nObrigado pela compra! Abaixo estão os seus acessos/arquivos.`
     });
 
-    // produto principal
-    await sendDeliveryItem(to, titulo, prod.entrega || {}, '');
+    if (ent.pdf_url) {
+      await sendDocument({
+        token: process.env.WHATSAPP_TOKEN,
+        phoneNumberId: process.env.PHONE_NUMBER_ID,
+        to,
+        url: ent.pdf_url,
+        filename: `${(titulo || 'arquivo').replace(/\s+/g,'_')}.pdf`
+      });
+    }
 
-    // bumps (cada um com prefixo)
-    for (let i = 0; i < boughtBumps.length; i++) {
-      const b = boughtBumps[i];
-      const prefix = `Bump #${i+1}`;
-      await sendDeliveryItem(to, b.titulo || `Bump ${i+1}`, b.entrega || {}, prefix);
+    if (ent.video_url) {
+      if (/\.(mp4|mov|m4v)$/i.test(ent.video_url)) {
+        await sendVideo({
+          token: process.env.WHATSAPP_TOKEN,
+          phoneNumberId: process.env.PHONE_NUMBER_ID,
+          to,
+          url: ent.video_url,
+          caption: `🎬 Vídeo do ${titulo}`
+        });
+      } else {
+        await sendText({
+          token: process.env.WHATSAPP_TOKEN,
+          phoneNumberId: process.env.PHONE_NUMBER_ID,
+          to,
+          body: `🎬 Acesse o vídeo: ${ent.video_url}`
+        });
+      }
+    }
+
+    if (ent.link_url) {
+      await sendText({
+        token: process.env.WHATSAPP_TOKEN,
+        phoneNumberId: process.env.PHONE_NUMBER_ID,
+        to,
+        body: `🔗 Link de acesso: ${ent.link_url}`
+      });
     }
 
     if (CONFIG.whatsapp_suporte) {
@@ -1183,11 +838,10 @@ async function sendGreeting(to, name) {
       phoneNumberId: process.env.PHONE_NUMBER_ID,
       to,
       body,
-      // AJUSTE: saudação com MENU (sem UNSUB aqui)
       buttons: [
         { id: 'CHOOSE_A', title: CONFIG?.produtoA?.rotulo || 'Produto A' },
         { id: 'CHOOSE_B', title: CONFIG?.produtoB?.rotulo || 'Produto B' },
-        { id: 'MENU',     title: 'Menu' }
+        { id: 'MENU',     title: 'Menu' },
       ],
     });
   } catch (e) {
@@ -1226,7 +880,7 @@ function buildGreeting(name = '') {
   return body;
 }
 
-// ======= AJUSTE: oferta inclui texto persuasivo curto + botões =======
+// ======= AJUSTE: oferta inclui texto persuasivo curto + botão "Voltar" =======
 async function sendOffer(to, product, orderId) {
   let link;
   const urlTpl = String(product?.checkout_url || '').trim();
@@ -1249,7 +903,7 @@ async function sendOffer(to, product, orderId) {
   const title   = product?.titulo || 'Oferta';
   const price   = product?.preco  || '';
   const suporte = CONFIG.whatsapp_suporte || '';
-  const pers    = shortPersuasive(CONFIG.texto, 240);
+  const pers    = shortPersuasive(CONFIG.texto, 240); // usa Texto persuasivo encurtado
 
   const body =
     `📦 ${title}\n` +
@@ -1259,12 +913,7 @@ async function sendOffer(to, product, orderId) {
     (link  ? `👉 Pague no link seguro:\n${link}\n\n` : '\n') +
     (suporte ? `📞 Suporte: ${suporte}` : '');
 
-  await sendText({
-    token: process.env.WHATSAPP_TOKEN,
-    phoneNumberId: process.env.PHONE_NUMBER_ID,
-    to,
-    body
-  });
+  await sendText({ token: process.env.WHATSAPP_TOKEN, phoneNumberId: process.env.PHONE_NUMBER_ID, to, body });
 
   try {
     await sendButtons({
@@ -1272,10 +921,7 @@ async function sendOffer(to, product, orderId) {
       phoneNumberId: process.env.PHONE_NUMBER_ID,
       to,
       body: '⬅️ Voltar ao menu',
-      buttons: [
-        { id: 'MENU',  title: 'Voltar ao menu' },
-        { id: 'UNSUB', title: 'Não receber mensagens' }
-      ],
+      buttons: [{ id: 'MENU', title: 'Menu' }],
     });
   } catch (e) {
     console.error('[sendOffer buttons] erro:', e?.response?.data || e.message);
@@ -1477,84 +1123,22 @@ app.post('/webhook', (req, res) => {
         if (wa_id_norm) logEvent({ type: 'message_in', wa_id: wa_id_norm });
       } catch {}
 
-      // ====== BOTÕES INTERACTIVE ======
       if (msg.type === 'interactive' && msg.interactive?.type === 'button_reply') {
         const payload = String(msg.interactive.button_reply.id || '').toUpperCase();
-
-        if (payload === 'UNSUB') {
-          markOptOut(to);
-          await sendText({
-            token: process.env.WHATSAPP_TOKEN,
-            phoneNumberId: process.env.PHONE_NUMBER_ID,
-            to,
-            body: 'Você não receberá mais nossas campanhas. Se mudar de ideia, responda "quero receber".'
-          });
-          return;
-        }
-
         if (payload === 'CHOOSE_A') { const orderId = makeOrderId(); await sendOffer(to, CONFIG.produtoA, orderId); return; }
         if (payload === 'CHOOSE_B') { const orderId = makeOrderId(); await sendOffer(to, CONFIG.produtoB, orderId); return; }
         if (payload === 'MENU')     { s.stage = 'waiting_choice'; await sendGreeting(to, name); return; }
       }
 
-      // ====== BOTÕES (fallback de plataforma) ======
       if (msg.type === 'button' && msg?.button?.payload) {
         const payload = String(msg.button.payload || '').toUpperCase();
-
-        if (payload === 'UNSUB') {
-          markOptOut(to);
-          await sendText({
-            token: process.env.WHATSAPP_TOKEN,
-            phoneNumberId: process.env.PHONE_NUMBER_ID,
-            to,
-            body: 'Descadastro realizado. Você não receberá mais campanhas.'
-          });
-          return;
-        }
-
         if (payload === 'CHOOSE_A') { const orderId = makeOrderId(); await sendOffer(to, CONFIG.produtoA, orderId); return; }
         if (payload === 'CHOOSE_B') { const orderId = makeOrderId(); await sendOffer(to, CONFIG.produtoB, orderId); return; }
         if (payload === 'MENU')     { s.stage = 'waiting_choice'; await sendGreeting(to, name); return; }
       }
 
-      // ====== TEXTO ======
       if (msg.type === 'text') {
         const textIn = human(msg.text?.body).toLowerCase();
-
-        // 🔕 DESCADASTRO por texto
-        if ([
-          'parar','sair','cancelar','stop','unsubscribe',
-          'não quero receber','nao quero receber','não receber','nao receber',
-          'descadastrar','remover'
-        ].some(k => textIn.includes(k))) {
-          markOptOut(to);
-          await sendText({
-            token: process.env.WHATSAPP_TOKEN,
-            phoneNumberId: process.env.PHONE_NUMBER_ID,
-            to,
-            body: 'Ok, removi você da nossa lista. Para voltar a receber, responda "quero receber".'
-          });
-          return;
-        }
-
-        // 🔔 REATIVAÇÃO por texto (opcional)
-        if (['quero receber','voltar a receber','assinar','reativar'].some(k => textIn.includes(k))) {
-          if (!CONTACTS[to]) CONTACTS[to] = { name:'', lastSeen: Date.now(), purchased: false };
-          CONTACTS[to].opt_out = false; 
-          saveContacts();
-          try {
-            const wa = normPhone(msg.from);
-            let l = LEADS.find(x => x.wa_id === wa);
-            if (l) { l.opt_in_marketing = true; saveLeads(); }
-          } catch {}
-          await sendText({
-            token: process.env.WHATSAPP_TOKEN,
-            phoneNumberId: process.env.PHONE_NUMBER_ID,
-            to,
-            body: 'Perfeito! Você voltará a receber nossas ofertas.'
-          });
-          return;
-        }
 
         if (['reset','reiniciar','recomeçar','inicio','início'].includes(textIn)) {
           sessions.delete(msg.from);
@@ -1591,7 +1175,6 @@ app.post('/webhook', (req, res) => {
         });
         return;
       }
-
     } catch (e) {
       console.error('[WEBHOOK] erro:', e?.response?.data || e.message);
     }
@@ -1717,6 +1300,7 @@ app.get('/analytics/pay-status', (req, res) => {
     res.status(500).json({ ok:false, approved:false });
   }
 });
+
 
 // === Status de pagamento por orderId/payment_id (para o checkout "escutar")
 app.get('/analytics/pay-status', (req, res) => {

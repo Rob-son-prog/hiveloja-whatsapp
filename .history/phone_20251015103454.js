@@ -8,6 +8,7 @@ function waClient({ token, phoneNumberId }) {
   if (!token) throw new Error('WHATSAPP_TOKEN ausente');
   if (!phoneNumberId) throw new Error('PHONE_NUMBER_ID ausente');
 
+  // mantenho a mesma versão que você já usa no projeto
   const baseURL = `https://graph.facebook.com/v20.0/${phoneNumberId}/messages`;
   return axios.create({
     baseURL,
@@ -114,52 +115,10 @@ async function sendImage({ token, phoneNumberId, to, url, caption }) {
   return data;
 }
 
-/** Envia TEMPLATE (HSM) com parâmetros e header de mídia opcional */
-async function sendTemplate({ token, phoneNumberId, to, name, lang = 'pt_BR', params = [], mediaUrl = null }) {
-  if (!name) throw new Error('sendTemplate: name é obrigatório');
-  const api = waClient({ token, phoneNumberId });
-
-  const components = [];
-
-  // Header com mídia opcional (imagem/vídeo) — precisa existir no template
-  if (mediaUrl) {
-    let headerParam = null;
-    if (/\.(mp4|m4v|mov|webm)$/i.test(mediaUrl)) {
-      headerParam = { type: 'video', video: { link: mediaUrl } };
-    } else if (/\.(png|jpe?g|gif|webp)$/i.test(mediaUrl)) {
-      headerParam = { type: 'image', image: { link: mediaUrl } };
-    }
-    if (headerParam) components.push({ type: 'header', parameters: [headerParam] });
-  }
-
-  // Body params ({{1}}, {{2}}, ...)
-  if (Array.isArray(params) && params.length) {
-    components.push({
-      type: 'body',
-      parameters: params.map(p => ({ type: 'text', text: String(p) }))
-    });
-  }
-
-  const payload = {
-    messaging_product: 'whatsapp',
-    to,
-    type: 'template',
-    template: {
-      name,
-      language: { code: lang },
-      components
-    }
-  };
-
-  const { data } = await api.post('', payload);
-  return data;
-}
-
 module.exports = {
   sendText,
   sendButtons,
   sendDocument,
   sendVideo,
-  sendImage,
-  sendTemplate, // <— novo
+  sendImage, // <— novo
 };

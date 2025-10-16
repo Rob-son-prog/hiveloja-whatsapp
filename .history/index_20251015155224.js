@@ -774,7 +774,7 @@ app.post('/mp/process-payment', async (req, res) => {
               registration_date: new Date().toISOString().slice(0,10)
             }
           },
-          metadata: { orderId, productKey, bumps: flags }
+          metadata: { orderId, productKey }
         };
 
         Object.keys(body).forEach(k => body[k] === undefined && delete body[k]);
@@ -802,7 +802,7 @@ app.post('/mp/process-payment', async (req, res) => {
           payer: { email: req.body?.payer?.email || 'compras@example.com' },
           binary_mode: true,
           notification_url: NOTIFY,
-          metadata: { orderId, productKey, bumps: flags }
+          metadata: { orderId, productKey }
         };
 
         const resp = await mpPayment.create({ body });
@@ -885,7 +885,7 @@ app.post('/mp/process-payment', async (req, res) => {
               federal_unit: address.federal_unit
             }
           },
-          metadata: { orderId, productKey, bumps: flags }
+          metadata: { orderId, productKey }
         };
 
         const resp = await mpPayment.create({ body });
@@ -963,72 +963,6 @@ app.get('/mp/checkout', async (req, res) => {
     return res.status(500).send('Falha ao redirecionar para Mercado Pago');
   }
 });
-
-// ===== helper de entrega (produto/bumps) =====
-async function sendDeliveryItem(to, titulo, entrega = {}, prefix = '') {
-  const ent = {
-    pdf_url:   entrega.pdf_url   ? absolutize(entrega.pdf_url)   : '',
-    video_url: entrega.video_url ? absolutize(entrega.video_url) : '',
-    link_url:  entrega.link_url  ? absolutize(entrega.link_url)  : ''
-  };
-  const tag = prefix ? `${prefix} ` : '';
-
-  // aviso/recibo
-  await sendText({
-    token: process.env.WHATSAPP_TOKEN,
-    phoneNumberId: process.env.PHONE_NUMBER_ID,
-    to,
-    body:
-      `✅ ${tag}${titulo}\n` +
-      (ent.link_url  ? `🔗 Link: ${ent.link_url}\n`  : '') +
-      (ent.pdf_url   ? `📄 PDF: ${ent.pdf_url}\n`   : '') +
-      (ent.video_url ? `🎬 Vídeo: ${ent.video_url}\n` : '')
-  });
-
-  if (ent.pdf_url) {
-    try {
-      await sendDocument({
-        token: process.env.WHATSAPP_TOKEN,
-        phoneNumberId: process.env.PHONE_NUMBER_ID,
-        to,
-        url: ent.pdf_url,
-        filename: `${(titulo || 'arquivo').replace(/\s+/g,'_')}.pdf`
-      });
-    } catch (e) { console.warn('[delivery/pdf] falhou:', e?.response?.data || e.message); }
-  }
-
-  if (ent.video_url) {
-    try {
-      if (/\.(mp4|mov|m4v|webm)$/i.test(ent.video_url)) {
-        await sendVideo({
-          token: process.env.WHATSAPP_TOKEN,
-          phoneNumberId: process.env.PHONE_NUMBER_ID,
-          to,
-          url: ent.video_url,
-          caption: `🎬 Vídeo — ${titulo}`
-        });
-      } else {
-        await sendText({
-          token: process.env.WHATSAPP_TOKEN,
-          phoneNumberId: process.env.PHONE_NUMBER_ID,
-          to,
-          body: `🎬 Assista aqui: ${ent.video_url}`
-        });
-      }
-    } catch (e) { console.warn('[delivery/video] falhou:', e?.response?.data || e.message); }
-  }
-
-  if (ent.link_url) {
-    try {
-      await sendText({
-        token: process.env.WHATSAPP_TOKEN,
-        phoneNumberId: process.env.PHONE_NUMBER_ID,
-        to,
-        body: `🔐 Acesse novamente quando quiser: ${ent.link_url}`
-      });
-    } catch (e) { console.warn('[delivery/link] falhou:', e?.response?.data || e.message); }
-  }
-}
 
 // ===== Mercado Pago webhook: envia entrega quando APROVADO =====
 async function handleMpWebhook(req, res) {
@@ -1124,37 +1058,54 @@ async function handleMpWebhook(req, res) {
       console.warn('[MP WEBHOOK] falhou ao salvar contato (purchased=true):', e.message);
     }
 
-    // === entrega do produto principal + bumps comprados ===
+    // envia os itens de entrega
     const prod   = CONFIG[`produto${key}`] || {};
+    const ent    = prod.entrega || {};
     const titulo = prod.titulo || `Produto ${key}`;
 
-    // extrai bumps comprados do metadata
-    const mdBumps = (p.metadata?.bumps && typeof p.metadata.bumps === 'object') ? p.metadata.bumps : {};
-    const bumpsArr = Array.isArray(prod.bumps) ? prod.bumps : [];
-    const boughtBumps = bumpsArr.filter(b =>
-      b && (mdBumps[b.id] || mdBumps[String(b.id)] || mdBumps[b.titulo])
-    );
-
-    // recibo geral
     await sendText({
       token: process.env.WHATSAPP_TOKEN,
       phoneNumberId: process.env.PHONE_NUMBER_ID,
       to,
-      body:
-        `✅ Pagamento aprovado!\n\n` +
-        `📦 Produto: ${titulo}\n` +
-        (boughtBumps.length ? `➕ Bumps: ${boughtBumps.map(b=>b.titulo||b.id).join(', ')}\n\n` : `\n`) +
-        `Enviarei abaixo seus acessos.`
+      body: `✅ Pagamento aprovado!\n\n📦 ${titulo}\nObrigado pela compra! Abaixo estão os seus acessos/arquivos.`
     });
 
-    // produto principal
-    await sendDeliveryItem(to, titulo, prod.entrega || {}, '');
+    if (ent.pdf_url) {
+      await sendDocument({
+        token: process.env.WHATSAPP_TOKEN,
+        phoneNumberId: process.env.PHONE_NUMBER_ID,
+        to,
+        url: ent.pdf_url,
+        filename: `${(titulo || 'arquivo').replace(/\s+/g,'_')}.pdf`
+      });
+    }
 
-    // bumps (cada um com prefixo)
-    for (let i = 0; i < boughtBumps.length; i++) {
-      const b = boughtBumps[i];
-      const prefix = `Bump #${i+1}`;
-      await sendDeliveryItem(to, b.titulo || `Bump ${i+1}`, b.entrega || {}, prefix);
+    if (ent.video_url) {
+      if (/\.(mp4|mov|m4v)$/i.test(ent.video_url)) {
+        await sendVideo({
+          token: process.env.WHATSAPP_TOKEN,
+          phoneNumberId: process.env.PHONE_NUMBER_ID,
+          to,
+          url: ent.video_url,
+          caption: `🎬 Vídeo do ${titulo}`
+        });
+      } else {
+        await sendText({
+          token: process.env.WHATSAPP_TOKEN,
+          phoneNumberId: process.env.PHONE_NUMBER_ID,
+          to,
+          body: `🎬 Acesse o vídeo: ${ent.video_url}`
+        });
+      }
+    }
+
+    if (ent.link_url) {
+      await sendText({
+        token: process.env.WHATSAPP_TOKEN,
+        phoneNumberId: process.env.PHONE_NUMBER_ID,
+        to,
+        body: `🔗 Link de acesso: ${ent.link_url}`
+      });
     }
 
     if (CONFIG.whatsapp_suporte) {

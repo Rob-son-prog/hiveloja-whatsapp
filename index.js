@@ -11,6 +11,11 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// ==== BASE DE DADOS PERSISTENTE =============================================
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+// ============================================================================
+
 // === SERVE /checkout =========================================================
 const staticCheckoutPath = path.join(__dirname, 'checkout');
 app.use('/checkout', express.static(staticCheckoutPath));
@@ -23,8 +28,8 @@ app.get('/checkout/*', (_req, res) => {
 // ============================================================================
 
 // --- [CAMPANHAS] armazenamento em disco -------------------------------
-const CAMPAIGN_PATH = path.join(__dirname, 'campaign.json');
-const CONTACTS_PATH = path.join(__dirname, 'contacts.json');
+const CAMPAIGN_PATH = path.join(DATA_DIR, 'campaign.json');
+const CONTACTS_PATH = path.join(DATA_DIR, 'contacts.json');
 
 let CONTACTS = {}; // { "+5565...": { name, lastSeen, purchased } }
 try { if (fs.existsSync(CONTACTS_PATH)) CONTACTS = JSON.parse(fs.readFileSync(CONTACTS_PATH,'utf8')); } catch {}
@@ -265,8 +270,8 @@ function personalize(text, to){
 }
 
 // === uploads (multer) ========================================================
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
-if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
+const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
@@ -294,7 +299,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
 // ============================================================================
 
 // ---------- CONFIG persistente ----------
-const CONFIG_PATH = path.join(__dirname, 'config.json');
+const CONFIG_PATH = path.join(DATA_DIR, 'config.json');
 
 let CONFIG = {
   titulo: 'Lista de Fornecedores de Atacado',
@@ -345,8 +350,8 @@ function saveConfig() {
 }
 
 // ======== CAMPANHAS: storage simples ========
-const LEADS_PATH = path.join(__dirname, 'leads.json');
-const CAMPAIGNS_PATH = path.join(__dirname, 'campaigns.json');
+const LEADS_PATH = path.join(DATA_DIR, 'leads.json');
+const CAMPAIGNS_PATH = path.join(DATA_DIR, 'campaigns.json');
 
 function readJsonSafe(p, fallback) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return fallback; }
@@ -1441,7 +1446,7 @@ app.get('/webhook', (req, res) => {
 });
 
 // === Analytics simples (com dedupe) =========================================
-const ANALYTICS_PATH = path.join(__dirname, 'analytics.json');
+const ANALYTICS_PATH = path.join(DATA_DIR, 'analytics.json');
 function readJsonSafe2(p, fb){ try { return JSON.parse(fs.readFileSync(p,'utf8')); } catch { return fb; } }
 function writeJsonSafe2(p, v){ fs.writeFileSync(p, JSON.stringify(v, null, 2)); }
 
@@ -1673,6 +1678,7 @@ app.get('/analytics/stats', (req, res) => {
     // --- dedupe de purchases por payment_id (fallback: orderId)
     const uniqKey = e => e.payment_id || (`ORD:${e.orderId||''}`);
     const seen = new Set();
+    theQuery = null;
     const uniquePurchases = [];
     evs.forEach(e => {
       if (e.type !== 'purchase') return;

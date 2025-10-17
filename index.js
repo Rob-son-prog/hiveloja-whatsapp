@@ -654,7 +654,8 @@ function calcTotalAmount(productKey, flags = {}) {
   return Number(total.toFixed(2));
 }
 
-async function createMPPreferenceForProduct(productKey, orderId) {
+// Substitua sua função createMPPreferenceForProduct inteira por esta versão
+async function createMPPreferenceForProduct(productKey, orderId, wa /* <-- novo, opcional */) {
   const base = (process.env.APP_BASE_URL || '').replace(/\/+$/, '');
   const prod = CONFIG[`produto${productKey}`] || {};
   const title = prod.titulo || `Produto ${productKey}`;
@@ -670,13 +671,19 @@ async function createMPPreferenceForProduct(productKey, orderId) {
       pending: `${base}/checkout/pendente.html`,
     },
     auto_return: 'approved',
-    metadata: { orderId, productKey },
+    // 👇 AQUI: passamos o número do cliente para não depender de memória
+    metadata: { orderId, productKey, wa }, 
     notification_url: `${base}/mp/webhook`
   };
 
   const pref = new Preference(mpClient);
   const resp = await pref.create({ body: preference });
-  const init = resp?.init_point || resp?.sandbox_init_point || resp?.body?.init_point || resp?.body?.sandbox_init_point;
+  const init =
+    resp?.init_point ||
+    resp?.sandbox_init_point ||
+    resp?.body?.init_point ||
+    resp?.body?.sandbox_init_point;
+
   if (!init) throw new Error('Não foi possível obter init_point do Mercado Pago.');
   return { init_point: init, pref_id: resp?.body?.id || '' };
 }
@@ -1260,7 +1267,8 @@ async function sendOffer(to, product, orderId) {
   if (urlTpl.startsWith('mp:')) {
     try {
       const keyGuess = (product === CONFIG.produtoB) ? 'B' : 'A';
-      const { init_point } = await createMPPreferenceForProduct(keyGuess, orderId);
+      const { init_point } = await createMPPreferenceForProduct(keyGuess, orderId, to);
+
       link = init_point;
     } catch (e) {
       console.error('[sendOffer] MP error:', e?.response?.data || e.message);

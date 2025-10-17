@@ -805,7 +805,7 @@
     CURRENT_ORDER_ID = orderId;
 
     try {
-      const payload = { orderId, productKey: cur };
+      const payload = { orderId, productKey: cur, wa: getCheckoutWA() }; /* << adicionado wa */
       if (navigator.sendBeacon) {
         navigator.sendBeacon('/analytics/checkout-click', new Blob([JSON.stringify(payload)], { type:'application/json' }));
       } else {

@@ -564,6 +564,20 @@ function buildCheckoutUrl(urlTemplate, orderId) {
   return String(urlTemplate || '').replace('{ORDER_ID}', orderId);
 }
 
+/* === Helper: garante ?wa=<numero> no link do checkout === */
+function appendWaParam(url, to){
+  try{
+    if(!url || !to) return url;
+    const wa = String(to).replace(/\D/g,'');
+    const base = (process.env.APP_BASE_URL || '').replace(/\/+$/,'') || 'http://localhost';
+    const u = new URL(url, base);
+    if(!u.searchParams.get('wa')) u.searchParams.set('wa', wa);
+    // mantém relativo se a url original era relativa
+    if (!/^https?:\/\//i.test(url)) return u.pathname + (u.search || '') + (u.hash || '');
+    return u.toString();
+  }catch{ return url; }
+}
+
 function buildCheckoutUrlFor(productKey, orderId) {
   const prod = CONFIG[`produto${productKey}`] || {};
   const theUrl = String(prod.checkout_url || '').trim();
@@ -975,7 +989,8 @@ app.get('/mp/checkout', async (req, res) => {
     }
     const productKey = String(req.query.product || 'A').toUpperCase() === 'B' ? 'B' : 'A';
     const orderId = req.query.orderId || makeOrderId();
-    const { init_point } = await createMPPreferenceForProduct(productKey, orderId);
+    const wa = (req.query.wa || '').toString().trim();
+    const { init_point } = await createMPPreferenceForProduct(productKey, orderId, wa);
     return res.redirect(init_point);
   } catch (e) {
     console.error('[MP checkout]', e?.response?.data || e.message);
@@ -1282,6 +1297,9 @@ async function sendOffer(to, product, orderId) {
   } else {
     link = buildCheckoutUrl(urlTpl, orderId);
   }
+
+  // >>> garante que o link tem ?wa=<numero>
+  link = appendWaParam(link, to);
 
   const productKey = (product === CONFIG.produtoB) ? 'B' : 'A';
   ORDERS.set(orderId, { to, productKey, createdAt: Date.now() });

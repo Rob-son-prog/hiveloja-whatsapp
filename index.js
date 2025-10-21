@@ -1065,7 +1065,17 @@ async function sendDeliveryItem(to, titulo, entrega = {}, prefix = '') {
 }
 
 // ===== Mercado Pago webhook: envia entrega quando APROVADO =====
+
+// ======= NOVO BLOCO: idempotência de entrega (não duplica) ==================
+const DELIVERED_PATH = path.join(DATA_DIR, 'delivered.json');
+let DELIVERED = (() => {
+  try { return JSON.parse(fs.readFileSync(DELIVERED_PATH,'utf8')); } catch { return {}; }
+})();
+function saveDelivered(){ fs.writeFileSync(DELIVERED_PATH, JSON.stringify(DELIVERED,null,2)); }
+// ============================================================================
+
 async function handleMpWebhook(req, res) {
+  if (req.method !== 'POST') return res.sendStatus(200); // ignora GET
   res.sendStatus(200);
   try {
     if (!process.env.MP_ACCESS_TOKEN || !mpClient) return;
@@ -1104,9 +1114,16 @@ async function handleMpWebhook(req, res) {
       return;
     }
 
+    // ======= NOVO: trava anti-duplicado por paymentId =======================
+    const paymentId = String(p.id || '').trim();
+    if (DELIVERED[paymentId] === true) {
+      console.log('[MP WEBHOOK] entrega já feita para', paymentId);
+      return;
+    }
+    // =======================================================================
+
     // 3) Atualiza dashboard (sempre que aprovado)
     try {
-      const paymentId = String(p.id || '').trim();
       const orderId   = p.metadata?.orderId || null;
 
       if (alreadyLoggedPayment(paymentId, orderId)) {
@@ -1220,13 +1237,18 @@ async function handleMpWebhook(req, res) {
       });
     }
 
+    // ======= NOVO: marca como entregue (idempotência) =======================
+    DELIVERED[paymentId] = true;
+    saveDelivered();
+    // =======================================================================
+
     if (orderId) ORDERS.delete(orderId);
   } catch (e) {
     console.error('[MP WEBHOOK] erro:', e?.response?.data || e.message);
   }
 }
 app.post('/mp/webhook', handleMpWebhook);
-app.get('/mp/webhook',  handleMpWebhook);
+app.get('/mp/webhook',  (_req, res) => res.status(200).send('ok'));
 
 // ======= AJUSTE: saudação envia só mensagem com botões (com fallback) =======
 async function sendGreeting(to, name) {

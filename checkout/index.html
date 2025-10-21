@@ -80,6 +80,45 @@
     @media (max-width:480px){.paygrid{grid-template-columns:1fr}}
     @media (max-width:520px){.pix-side{min-width:100%}}
   </style>
+  <!-- META PIXEL no CHECKOUT -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+
+fbq('init','485048727968944');
+
+(function(){
+  // usa o ev_id propagado da landing (URL) se existir
+  const qp = new URLSearchParams(location.search);
+  const evId = qp.get('ev_id') || sessionStorage.getItem('fb_event_id') || undefined;
+
+  fbq('track','PageView');
+  fbq('track','InitiateCheckout', {}, evId ? {eventID: evId} : undefined);
+
+  // Dispara AddPaymentInfo 1x quando o usuário tocar nos campos do cartão
+  let fired = false;
+  function fireOnce(){
+    if (fired) return; fired = true;
+    fbq('track','AddPaymentInfo', {}, evId ? {eventID: evId} : undefined);
+  }
+  const ids = ['form-card-number','form-card-expiration-date','form-security-code','form-cardholder-name','form-payer-email','form-doc-number'];
+  function wire(){
+    ids.forEach(id=>{
+      const el = document.getElementById(id);
+      if(el && !el.__fb_wired){
+        el.__fb_wired = true;
+        el.addEventListener('input', fireOnce, {once:true,passive:true});
+        el.addEventListener('focus', fireOnce, {once:true,passive:true});
+      }
+    });
+  }
+  wire();
+  const int = setInterval(()=>{ wire(); if(fired) clearInterval(int); }, 1000);
+})();
+</script>
+
 
   <!-- SDK do Mercado Pago -->
   <script src="https://sdk.mercadopago.com/js/v2"></script>
@@ -89,6 +128,8 @@
   </script>
 </head>
 <body>
+  <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=485048727968944&ev=PageView&noscript=1"/></noscript>
+
   
   <div class="wrap">
     <div class="head">

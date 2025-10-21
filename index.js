@@ -1621,11 +1621,29 @@ app.post('/webhook', (req, res) => {
           return;
         }
 
-        if (['menu','oi','olá','ola','iniciar','começar','comecar','inicio','início'].includes(textIn)) {
-          s.stage = 'waiting_choice';
-          await sendGreeting(to, name);
-          return;
-        }
+       if ([
+  // originais
+  'menu','oi','olá','ola','iniciar','começar','comecar','inicio','início',
+
+  // novas saudações
+  'bom dia','bom dia!','bom dia.',
+  'boa tarde','boa tarde!','boa tarde.',
+  'boa noite','boa noite!','boa noite.',
+  'boa madrugada','boa madrugada!','boa madrugada.',
+  'opa','opa!','salve','salve!','hey','hello','hi',
+
+  // frases pedidas (com e sem acento/pontuação)
+  'gostaria de mais informações','gostaria de mais informacoes','gostaria de mais informações!','gostaria de mais informacoes!',
+  'gostaria da receita','gostaria da receita!','gostaria da receita?',
+  'eu quero a receita','eu quero a receita!','eu quero a receita?',
+  'eu quero','eu quero!','eu quero?',
+  'como eu consigo a receita','como eu consigo a receita?','como eu consigo a receita!'
+].includes(textIn)) {
+  s.stage = 'waiting_choice';
+  await sendGreeting(to, name);
+  return;
+}
+
 
         if (['a','1','produto a','oferta a'].includes(textIn)) {
           const orderId = makeOrderId(); await sendOffer(to, CONFIG.produtoA, orderId); return;

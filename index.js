@@ -894,7 +894,10 @@ app.post('/mp/process-payment', async (req, res) => {
         if (!address.street_number) missing.push('payer.address.street_number');
         if (!address.neighborhood)  missing.push('payer.address.neighborhood');
         if (!address.city)          missing.push('payer.address.city');
-        if (!address.federal_unit || address.federal_unit.length !== 2) missing.push('payer.address.federal_unit (UF)');
+        if (!address.federal_unit || String(address.federal_unit).trim().length !== 2) {
+  missing.push('payer.address.federal_unit (UF)');
+}
+
 
         if (missing.length) {
           return res.status(400).json({ ok:false, error:'Endereço do pagador incompleto para boleto', required: missing, received: address });

@@ -122,13 +122,14 @@ app.post('/campaigns/run-now', async (req, res) => {
       .map(([num]) => num);
 
     // modo teste (envia só para um número específico)
-    if (camp.test_to && String(camp.test_to).trim()) {
-      const to = String(camp.test_to).trim();
-      numbers = [to].filter(n => !isOptedOut(n)); // respeita opt-out no teste também
-    }
+if (camp.test_to && String(camp.test_to).trim()) {
+  const to = normPhone(String(camp.test_to));         // normaliza para E.164 (+55…)
+  numbers = to ? [to].filter(n => !isOptedOut(n)) : []; // respeita opt-out no teste também
+}
 
-    // conteúdo
-    const text24 = (camp.content?.text_24h || '').trim(); // pode estar vazio quando for template-only
+// conteúdo
+const text24 = (camp.content?.text_24h || '').trim(); // correto
+
 
     // dispara com intervalos aleatórios
     let delay = 0;

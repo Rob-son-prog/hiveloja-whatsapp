@@ -21,34 +21,26 @@
     .ok { color:#118a4e; margin-left:8px; font-size:13px; }
     .danger { color:#b32d2e; font-size:12px; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-
     .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#eef3ff; color:#1d3dbf; font-size:12px; }
     .hr { height:1px; background:#eee; margin:12px 0; }
     .right { text-align:right; }
     .codebox { background:#f7f7f7; border:1px solid #eee; padding:10px; border-radius:10px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size:12px; max-height:140px; overflow:auto; }
-
-    .backdash {
-      position: fixed; top: 14px; right: 14px; z-index: 9999;
-      background: #22c55e; color: #062a12; font: 600 14px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      padding: 10px 14px; border-radius: 10px; text-decoration: none;
-      box-shadow: 0 6px 18px rgba(0,0,0,.35); border: 0; transition: transform .06s ease, filter .2s ease;
-      display: inline-flex; align-items: center; gap: 8px;
-    }
+    .backdash { position: fixed; top: 14px; right: 14px; z-index: 9999; background: #22c55e; color: #062a12; font: 600 14px/1.1 system-ui,-apple-system,Segoe UI,Roboto,Arial; padding: 10px 14px; border-radius: 10px; text-decoration: none; box-shadow: 0 6px 18px rgba(0,0,0,.35); border: 0; transition: transform .06s ease, filter .2s ease; display: inline-flex; align-items: center; gap: 8px; }
     .backdash:hover { transform: translateY(-1px); filter: brightness(1.05); }
     .backdash:active { transform: translateY(0); }
     .backdash svg { width: 16px; height: 16px; }
-
     .media-row { display:flex; gap:8px; align-items:center; }
     .media-preview { display:none; gap:12px; align-items:flex-start; margin-top:6px; }
     .media-preview img, .media-preview video { max-width:220px; border:1px solid #eee; border-radius:8px; }
+    /* Badge da audiência ao lado do seletor de janela 24h */
+    .aud-wrap{ display:flex; align-items:center; gap:8px; }
+    .aud-badge{ font-size:12px; background:#f1f5f9; color:#0f172a; border:1px solid #e2e8f0; padding:4px 8px; border-radius:999px; white-space:nowrap; }
+    .aud-badge.loading{ opacity:.6 }
   </style>
 </head>
 <body>
   <a href="/admin/dashboard.html" class="backdash" title="Voltar ao Dashboard">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M15 18l-6-6 6-6"/>
-    </svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
     Dashboard
   </a>
 
@@ -65,11 +57,7 @@
             <div><label>WhatsApp de suporte (E.164)</label><input id="whatsapp_suporte" placeholder="+5565984361007"></div>
           </div>
           <div><label>Texto persuasivo</label><textarea id="texto" placeholder="Receba a lista completa imediatamente após o pagamento."></textarea></div>
-          <div>
-            <label>Checkout URL (usa <span class="mono">{ORDER_ID}</span>)</label>
-            <input id="checkout_url" placeholder="https://pay.cakto.com.br/SEU_LINK?orderId={ORDER_ID}">
-            <div class="muted">Ex.: https://pay.cakto.com.br/<b>seu_link</b>?orderId={<b>ORDER_ID</b>}</div>
-          </div>
+          <div><label>Checkout URL (usa <span class="mono">{ORDER_ID}</span>)</label><input id="checkout_url" placeholder="https://pay.cakto.com.br/SEU_LINK?orderId={ORDER_ID}"><div class="muted">Ex.: https://pay.cakto.com.br/<b>seu_link</b>?orderId={<b>ORDER_ID</b>}</div></div>
         </div>
       </div>
 
@@ -144,13 +132,19 @@
 
           <div class="col2">
             <div>
-              <label>Janela 24h</label>
-              <select id="c_mode">
-                <option value="auto">Automático (texto livre ≤24h, template &gt;24h)</option>
-                <option value="only24">Somente dentro de 24h (texto livre)</option>
-                <option value="onlyTemplate">Sempre com template (recomendado p/ &gt;24h)</option>
-              </select>
-              <div class="muted">Fora de 24h só com <b>template aprovado</b>.</div>
+              <div class="aud-wrap">
+                <div style="flex:1">
+                  <label>Janela 24h</label>
+                  <select id="c_mode">
+                    <option value="auto">Automático (texto livre ≤24h, template &gt;24h)</option>
+                    <option value="only24">Somente dentro de 24h (texto livre)</option>
+                    <option value="onlyTemplate">Sempre com template (recomendado p/ &gt;24h)</option>
+                  </select>
+                  <div class="muted">Fora de 24h só com <b>template aprovado</b>.</div>
+                </div>
+                <!-- NOVO: badge dinâmica -->
+                <div id="c_mode_audience" class="aud-badge loading" title="Estimativa baseada nos eventos únicos do /analytics/stats">Calculando…</div>
+              </div>
             </div>
             <div>
               <label>Intervalo entre envios (segundos)</label>
@@ -177,7 +171,6 @@
               <input id="c_tpl_lang" value="pt_BR" placeholder="pt_BR">
               <label style="margin-top:8px">Parâmetros do template (separe por vírgula)</label>
               <input id="c_tpl_params" placeholder="Ex.: Robson, 29,90, hoje">
-
               <label style="margin-top:8px">Mídia (URL opcional do template)</label>
               <div class="media-row">
                 <input id="c_tpl_media" placeholder="https://.../arquivo.jpg ou .mp4" style="flex:1;">
@@ -222,23 +215,18 @@
     S('preco').value = cfg.preco || '';
     S('whatsapp_suporte').value = cfg.whatsapp_suporte || '';
     S('checkout_url').value = cfg.checkout_url || '';
-
     const saud = cfg.saudacao || 'Olá, {NAME}! 👋\\n\\nTenho duas opções pra você:\\nA) ' + (cfg?.produtoA?.titulo||'Produto A') + ' — ' + (cfg?.produtoA?.preco||'R$') + '\\nB) ' + (cfg?.produtoB?.titulo||'Produto B') + ' — ' + (cfg?.produtoB?.preco||'R$') + '\\n\\nToque no botão ou digite A ou B.';
     S('saudacao').value = saud;
-
     S('botaoA').value = (cfg?.produtoA?.rotulo) || 'Produto A';
     S('botaoB').value = (cfg?.produtoB?.rotulo) || 'Produto B';
-
     S('produtoA_rotulo').value = (cfg?.produtoA?.rotulo) || 'Oferta A';
     S('produtoA_titulo').value = (cfg?.produtoA?.titulo) || 'Lista de Fornecedores Premium';
     S('produtoA_preco').value = (cfg?.produtoA?.preco) || 'R$ 19,90';
     S('produtoA_checkout').value = (cfg?.produtoA?.checkout_url) || '';
-
     S('produtoB_rotulo').value = (cfg?.produtoB?.rotulo) || 'Oferta B';
     S('produtoB_titulo').value = (cfg?.produtoB?.titulo) || 'Lista com Contatos Extras';
     S('produtoB_preco').value = (cfg?.produtoB?.preco) || 'R$ 29,90';
     S('produtoB_checkout').value = (cfg?.produtoB?.checkout_url) || '';
-
     updatePreview();
   }
 
@@ -359,7 +347,7 @@
       const json = await res.json();
       if (!json.ok) throw new Error(json.error || 'Falha no upload');
 
-      const finalUrl = json.absolute_url || json.url; // usa absoluta se houver APP_BASE_URL
+      const finalUrl = json.absolute_url || json.url;
       urlInput.value = finalUrl;
 
       const isImg = /\.(png|jpe?g|gif|webp)$/i.test(file.name);
@@ -375,6 +363,72 @@
       alert('Erro ao anexar a mídia.');
     }
   }
+
+  // ===== NOVO: Estimativa de audiência (sem mudar rotas) ====================
+  function ymd(d){ return d.toISOString().slice(0,10); }
+  function daysAgo(n){ const d = new Date(); d.setDate(d.getDate()-n); return d; }
+
+  async function fetchStatsRange(fromDate, toDate){
+    const qs = `?from=${fromDate}&to=${toDate}`;
+    const r = await fetch(`/analytics/stats${qs}`);
+    if(!r.ok) throw new Error('Falha ao consultar /analytics/stats');
+    return await r.json();
+  }
+
+  async function updateAudienceEstimate(){
+    const badge = S('c_mode_audience');
+    if(!badge) return;
+    try{
+      badge.classList.add('loading');
+      badge.textContent = 'Calculando…';
+
+      // Últimas 24h
+      const to = ymd(new Date());
+      const from24 = ymd(daysAgo(1));
+      const stats24 = await fetchStatsRange(from24, to);
+      const u24 = Number(stats24?.totals?.unique_msg_in || 0);
+
+      // Janela maior para estimar base total (ex.: 90 dias)
+      const fromAll = ymd(daysAgo(90));
+      const statsAll = await fetchStatsRange(fromAll, to);
+      const uAll = Number(statsAll?.totals?.unique_msg_in || 0);
+
+      const mode = S('c_mode').value;
+      const days = Math.max(0, Number(S('c_days').value || 0));
+
+      // Aproximação: >24h ≈ total_90d - última_24h
+      const over24 = Math.max(0, uAll - u24);
+      let txt = '';
+
+      if(mode === 'only24'){
+        txt = `≤24h: ${u24}`;
+      }else if(mode === 'onlyTemplate'){
+        txt = `>24h (est.): ${over24}`;
+      }else{ // auto
+        txt = `≤24h: ${u24} · >24h (est.): ${over24} · Total≈ ${u24+over24}`;
+      }
+
+      // Se o usuário pedir "últimos contato há (dias) ≥ X", reduzimos grosseiramente:
+      if(days > 1){
+        // estimativa adicional: considera que quem falou nos últimos X dias tende a estar fora do alvo
+        const fromX = ymd(daysAgo(days));
+        const statsX = await fetchStatsRange(fromX, to);
+        const uX = Number(statsX?.totals?.unique_msg_in || 0);
+        const approxGte = Math.max(0, uAll - uX);
+        txt += ` · ≥${days}d (est.): ${approxGte}`;
+      }
+
+      badge.textContent = txt;
+    }catch(e){
+      console.error('[audience-estimate]', e);
+      S('c_mode_audience').textContent = '—';
+    }finally{
+      S('c_mode_audience').classList.remove('loading');
+    }
+  }
+
+  ['c_mode','c_days'].forEach(id => S(id).addEventListener('change', updateAudienceEstimate));
+  window.addEventListener('load', updateAudienceEstimate);
  </script>
 
 </body>

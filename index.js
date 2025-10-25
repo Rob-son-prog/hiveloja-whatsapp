@@ -140,11 +140,20 @@ const text24 = (camp.content?.text_24h || '').trim(); // correto
       setTimeout(async () => {
         try {
           // ==== TEMPLATE (HSM) quando apropriado ====
-          const tplName   = (camp.content?.template_name || '').trim();
-          const tplLang   = (camp.content?.template_lang || 'pt_BR').trim();
-          const tplParams = parseTplParams(camp.content?.template_params);
-          const tplMedia  = absolutize((camp.content?.template_media_url || '').trim());
-          const mode = camp.policy?.mode || 'auto'; // auto | only24 | onlyTemplate
+          // ==== TEMPLATE (HSM) quando apropriado ====
+const tplName  = (camp.content?.template_name || '').trim();
+const tplLang  = (camp.content?.template_lang || 'pt_BR').trim();
+
+// ▼▼▼ SUBSTITUA APENAS ESSA PARTE ▼▼▼
+const tplParamsBase = parseTplParams(camp.content?.template_params);
+const contactName   = (CONTACTS[to]?.name || '').trim();
+const tplParams     = (tplParamsBase.length ? tplParamsBase : [contactName || ''])
+  .map(v => v.replaceAll('{NAME}', contactName || ''));
+// ▲▲▲ FIM DA SUBSTITUIÇÃO ▲▲▲
+
+const tplMedia = absolutize((camp.content?.template_media_url || '').trim());
+const mode     = camp.policy?.mode || 'auto'; // auto | only24 | onlyTemplate
+
 
           const lastSeen = CONTACTS[to]?.lastSeen || 0;
           const outside24h = (Date.now() - lastSeen) > (24*60*60*1000);

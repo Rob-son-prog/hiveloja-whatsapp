@@ -80,8 +80,9 @@
     @media (max-width:480px){.paygrid{grid-template-columns:1fr}}
     @media (max-width:520px){.pix-side{min-width:100%}}
   </style>
+
   <!-- META PIXEL no CHECKOUT -->
-<script>
+  <script>
 !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
 n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
@@ -90,18 +91,21 @@ t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,do
 fbq('init','485048727968944');
 
 (function(){
-  // usa o ev_id propagado da landing (URL) se existir
   const qp = new URLSearchParams(location.search);
-  const evId = qp.get('ev_id') || sessionStorage.getItem('fb_event_id') || undefined;
+  let evId = qp.get('ev_id') || sessionStorage.getItem('fb_event_id');
+  if (!evId) {
+    evId = 'ev-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    sessionStorage.setItem('fb_event_id', evId);
+  }
+  window.__fb_event_id = evId;
 
   fbq('track','PageView');
-  fbq('track','InitiateCheckout', {}, evId ? {eventID: evId} : undefined);
+  fbq('track','InitiateCheckout', {}, {eventID: evId});
 
-  // Dispara AddPaymentInfo 1x quando o usuário tocar nos campos do cartão
   let fired = false;
   function fireOnce(){
     if (fired) return; fired = true;
-    fbq('track','AddPaymentInfo', {}, evId ? {eventID: evId} : undefined);
+    fbq('track','AddPaymentInfo', {}, {eventID: evId});
   }
   const ids = ['form-card-number','form-card-expiration-date','form-security-code','form-cardholder-name','form-payer-email','form-doc-number'];
   function wire(){
@@ -117,8 +121,7 @@ fbq('init','485048727968944');
   wire();
   const int = setInterval(()=>{ wire(); if(fired) clearInterval(int); }, 1000);
 })();
-</script>
-
+  </script>
 
   <!-- SDK do Mercado Pago -->
   <script src="https://sdk.mercadopago.com/js/v2"></script>
@@ -130,7 +133,6 @@ fbq('init','485048727968944');
 <body>
   <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=485048727968944&ev=PageView&noscript=1"/></noscript>
 
-  
   <div class="wrap">
     <div class="head">
       <h1>Checkout</h1>
@@ -363,59 +365,58 @@ fbq('init','485048727968944');
       </section>
 
       <!-- BOLETO -->
-<section id="boleto-block" class="hidden">
-  <h3 style="margin:10px 0">Gerar Boleto</h3>
-  <form id="boleto-form">
-    <div class="field">
-      <label for="boleto-name">Nome completo</label>
-      <input id="boleto-name" type="text" required>
-    </div>
-    <div class="field">
-      <label for="boleto-cpf">CPF</label>
-      <input id="boleto-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" required>
-    </div>
-    <div class="field">
-      <label for="boleto-email">Email</label>
-      <input id="boleto-email" type="email" placeholder="seu@email.com" required>
-    </div>
+      <section id="boleto-block" class="hidden">
+        <h3 style="margin:10px 0">Gerar Boleto</h3>
+        <form id="boleto-form">
+          <div class="field">
+            <label for="boleto-name">Nome completo</label>
+            <input id="boleto-name" type="text" required>
+          </div>
+          <div class="field">
+            <label for="boleto-cpf">CPF</label>
+            <input id="boleto-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" required>
+          </div>
+          <div class="field">
+            <label for="boleto-email">Email</label>
+            <input id="boleto-email" type="email" placeholder="seu@email.com" required>
+          </div>
 
-    <!-- Endereço exigido pelo MP para boleto registrado -->
-    <div class="field">
-      <label for="boleto-cep">CEP</label>
-      <input id="boleto-cep" type="text" inputmode="numeric" placeholder="78000-000" required>
-    </div>
-    <div class="field">
-      <label for="boleto-logradouro">Logradouro</label>
-      <input id="boleto-logradouro" type="text" placeholder="Rua Exemplo" required>
-    </div>
-    <div class="field">
-      <label for="boleto-numero">Número</label>
-      <input id="boleto-numero" type="text" placeholder="123" required>
-    </div>
-    <div class="field">
-      <label for="boleto-bairro">Bairro</label>
-      <input id="boleto-bairro" type="text" placeholder="Centro" required>
-    </div>
-    <div class="field">
-      <label for="boleto-cidade">Cidade</label>
-      <input id="boleto-cidade" type="text" placeholder="Cuiabá" required>
-    </div>
-    <div class="field">
-      <label for="boleto-uf">UF</label>
-      <input id="boleto-uf" type="text" maxlength="2" placeholder="MT" required>
-    </div>
-  </form>
-  <div id="boleto-result" class="status"></div>
-</section>
+          <!-- Endereço exigido pelo MP para boleto registrado -->
+          <div class="field">
+            <label for="boleto-cep">CEP</label>
+            <input id="boleto-cep" type="text" inputmode="numeric" placeholder="78000-000" required>
+          </div>
+          <div class="field">
+            <label for="boleto-logradouro">Logradouro</label>
+            <input id="boleto-logradouro" type="text" placeholder="Rua Exemplo" required>
+          </div>
+          <div class="field">
+            <label for="boleto-numero">Número</label>
+            <input id="boleto-numero" type="text" placeholder="123" required>
+          </div>
+          <div class="field">
+            <label for="boleto-bairro">Bairro</label>
+            <input id="boleto-bairro" type="text" placeholder="Centro" required>
+          </div>
+          <div class="field">
+            <label for="boleto-cidade">Cidade</label>
+            <input id="boleto-cidade" type="text" placeholder="Cuiabá" required>
+          </div>
+          <div class="field">
+            <label for="boleto-uf">UF</label>
+            <input id="boleto-uf" type="text" maxlength="2" placeholder="MT" required>
+          </div>
+        </form>
+        <div id="boleto-result" class="status"></div>
+      </section>
 
-<div id="payResult" class="muted" style="margin:8px 0 12px 0;"></div>
+      <div id="payResult" class="muted" style="margin:8px 0 12px 0;"></div>
 
-<div style="display:flex;gap:8px;flex-wrap:wrap">
-  <button id="btnPayNow" style="padding:10px 14px;border:0;border-radius:10px;background:#22c55e;color:#062a12;cursor:pointer;font-weight:600;">Finalizar Pagamento</button>
-  <button id="btnPayClose" style="padding:10px 14px;border:1px solid #333;border-radius:10px;background:#101217;color:#e9edf1;cursor:pointer;font-weight:600;">Cancelar</button>
-  <button id="btnGoMP" title="Abrir no Mercado Pago (fallback)" style="padding:10px 14px;border:1px solid #333;border-radius:10px;background:#101217;color:#e9edf1;cursor:pointer;font-weight:600;">Pagar no Mercado Pago</button>
-</div>
-
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="btnPayNow" style="padding:10px 14px;border:0;border-radius:10px;background:#22c55e;color:#062a12;cursor:pointer;font-weight:600;">Finalizar Pagamento</button>
+        <button id="btnPayClose" style="padding:10px 14px;border:1px solid #333;border-radius:10px;background:#101217;color:#e9edf1;cursor:pointer;font-weight:600;">Cancelar</button>
+        <button id="btnGoMP" title="Abrir no Mercado Pago (fallback)" style="padding:10px 14px;border:1px solid #333;border-radius:10px;background:#101217;color:#e9edf1;cursor:pointer;font-weight:600;">Pagar no Mercado Pago</button>
+      </div>
     `;
 
     const anchor = document.getElementById('bumps');
@@ -474,7 +475,7 @@ fbq('init','485048727968944');
         const r = await fetch(u, { cache: 'no-store' });
         const j = await r.json();
         if (j?.ok && j.approved){
-          showPixApprovedUI();
+          showPixApprovedUI(paymentId, orderId);
           return;
         }
       }catch(e){}
@@ -483,12 +484,17 @@ fbq('init','485048727968944');
     tick();
   }
 
-  function showPixApprovedUI(){
+  function showPixApprovedUI(paymentId, orderId){
     const out = document.getElementById('payResult');
     if (!out) return;
     const qr = out.querySelector('.qr-wrap');
     if (qr) qr.remove();
     out.innerHTML = `<div class="ok" style="color:#cfe7d7">Pagamento aprovado 🎉</div>`;
+    try{
+      const total = computeTotal();
+      const oid = orderId || (CURRENT_ORDER_ID || makeOrderId());
+      trackPurchaseFront(total, oid, paymentId, [{id: getProd()?.sku || ('PROD-'+(cur||'A')), quantity:1}]);
+    }catch(e){}
   }
 
   function getChosenMethod(){
@@ -597,7 +603,6 @@ fbq('init','485048727968944');
           const b = document.getElementById('copyPix');
           if (b) b.onclick = async ()=>{ try{ await navigator.clipboard.writeText(copia_e_cola||''); b.textContent='Copiado!'; setTimeout(()=>b.textContent='Copiar código',1500);}catch{} };
 
-          // >>> Inicia o watcher do PIX
           startPixWatcher(j.id, orderId);
 
         } else { out.innerHTML = 'Pagamento criado.'; }
@@ -757,6 +762,15 @@ fbq('init','485048727968944');
                 : (status ? `Status: ${status}` : 'Pagamento criado.');
       document.getElementById('card-result').innerHTML = `<div class="ok" style="color:#cfe7d7">${txt}${detail?` — ${detail}`:''}</div>`;
       out.innerHTML = '';
+
+      if ((status || '').toUpperCase() === 'APPROVED') {
+        try{
+          const total = computeTotal();
+          const oid = CURRENT_ORDER_ID || makeOrderId();
+          const pid = j.payment?.id || null;
+          trackPurchaseFront(total, oid, pid, [{id: getProd()?.sku || ('PROD-'+(cur||'A')), quantity:1}]);
+        }catch(e){}
+      }
     } catch(e){
       out.innerHTML = `<span style="color:#f87171">Erro: ${e.message}</span>`;
     }
@@ -841,7 +855,7 @@ fbq('init','485048727968944');
     CURRENT_ORDER_ID = orderId;
 
     try {
-      const payload = { orderId, productKey: cur, wa: getCheckoutWA() }; /* << adicionado wa */
+      const payload = { orderId, productKey: cur, wa: getCheckoutWA() };
       if (navigator.sendBeacon) {
         navigator.sendBeacon('/analytics/checkout-click', new Blob([JSON.stringify(payload)], { type:'application/json' }));
       } else {
@@ -851,6 +865,54 @@ fbq('init','485048727968944');
 
     togglePayPanel(true);
     setTimeout(mountCardFormWhenReady, 200);
+  }
+
+  /* ===== Helpers Meta Pixel/CAPI ===== */
+  function getCookie(name){
+    const m=document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)'); return m?m.pop():'';
+  }
+  function getFBP(){ return getCookie('_fbp'); }
+  function getFBC(){
+    const c = getCookie('_fbc');
+    if (c) return c;
+    const url = new URL(location.href);
+    const fbclid = url.searchParams.get('fbclid');
+    if (!fbclid) return '';
+    return `fb.1.${Date.now()}.${fbclid}`;
+  }
+
+  function trackPurchaseFront(amountBRL, orderId, paymentId, contents){
+    const evId = window.__fb_event_id;
+    // 1) Pixel no navegador
+    try{
+      fbq('track','Purchase',{
+        value: Number(amountBRL.toFixed ? amountBRL.toFixed(2) : amountBRL),
+        currency:'BRL',
+        contents: contents || [{id: orderId, quantity: 1}],
+        content_type:'product',
+        order_id: orderId
+      }, {eventID: evId});
+    }catch(e){}
+
+    // 2) Sinal para o servidor disparar CAPI
+    try{
+      const payload = {
+        event_id: evId,
+        order_id: orderId,
+        payment_id: paymentId || null,
+        value: Number(amountBRL),
+        currency: 'BRL',
+        fbp: getFBP() || null,
+        fbc: getFBC() || null,
+        wa: getCheckoutWA() || null,
+        email: (document.getElementById('form-payer-email')?.value || '').trim() || null
+      };
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/analytics/meta/purchase', new Blob([JSON.stringify(payload)], {type:'application/json'}));
+      } else {
+        fetch('/analytics/meta/purchase', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload), keepalive:true});
+      }
+    }catch(e){}
   }
 
   loadConfig().catch(err=>{ console.error(err); alert('Falha ao carregar configurações.'); });

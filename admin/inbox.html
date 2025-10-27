@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8"/>
+<title>Inbox</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  :root{--wa:#25D366;}
+  *{box-sizing:border-box}
+  body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:#f0f2f5}
+  .wrap{display:grid;grid-template-columns:320px 1fr;height:100vh}
+  .left{border-right:1px solid #e9ecef;display:flex;flex-direction:column;background:#fff}
+  .search{padding:10px;border-bottom:1px solid #e9ecef}
+  .search input{width:100%;padding:9px 12px;border:1px solid #dee2e6;border-radius:10px;outline:none}
+  .threads{overflow:auto}
+  .thread{padding:12px 12px;border-bottom:1px solid #f1f3f5;cursor:pointer}
+  .thread:hover{background:#f8f9fa}
+  .thread.active{background:#f2fff4}
+  .name{font-weight:600}
+  .last{color:#666;font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .right{display:flex;flex-direction:column;background:#e9edef}
+  .header{height:56px;display:flex;align-items:center;padding:0 16px;background:#f7f8fa;border-bottom:1px solid #dde1e4}
+  .header .title{font-weight:700}
+  .chat{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:6px}
+  .msg{max-width:70%;padding:8px 10px;border-radius:12px;line-height:1.35;background:#fff;position:relative}
+  .in  {align-self:flex-start;background:#fff}
+  .out {align-self:flex-end;background:#d9fdd3}
+  .ts{font-size:10px;color:#687076;margin-top:2px;text-align:right}
+  .st{font-size:12px;margin-left:6px;vertical-align:baseline}
+  .composer{display:flex;gap:8px;padding:10px;background:#fff;border-top:1px solid #dde1e4}
+  textarea{flex:1;resize:none;height:46px;padding:10px;border:1px solid #d0d5dd;border-radius:10px;outline:none}
+  button{padding:10px 14px;border:0;border-radius:10px;background:var(--wa);color:#fff;font-weight:700;cursor:pointer}
+  .empty{color:#8c8f94;font-size:14px;text-align:center;margin-top:30px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="left">
+    <div class="search">
+      <input id="q" placeholder="Pesquisar por nome, número ou última mensagem…" />
+    </div>
+    <div id="threads" class="threads"></div>
+  </div>
+
+  <div class="right">
+    <div class="header"><div class="title" id="title">Selecione um contato</div></div>
+    <div id="chat" class="chat"><div class="empty">Nenhuma conversa aberta.</div></div>
+    <div class="composer">
+      <textarea id="text" placeholder="Escreva uma mensagem…"></textarea>
+      <button id="send">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentWa = null;
+
+function tickFor(status){
+  // sent ✓   delivered ✓✓   read ✓✓ (azul)   failed !
+  if (status === 'read')      return '✓✓';
+  if (status === 'delivered') return '✓✓';
+  if (status === 'sent')      return '✓';
+  if (status === 'failed')    return '!';
+  return '';
+}
+function tickColor(status){
+  if (status === 'read')      return '#1DA1F2'; // azul
+  if (status === 'failed')    return '#D93025'; // vermelho
+  return '#6B7280'; // cinza
+}
+
+async function loadThreads(){
+  const q = document.getElementById('q').value.trim();
+  const r = await fetch('/inbox/threads?limit=200&q=' + encodeURIComponent(q));
+  const j = await r.json();
+  const rows = j.rows || [];
+  const el = document.getElementById('threads');
+  el.innerHTML = rows.map(t => `
+    <div class="thread ${t.wa_id===currentWa?'active':''}" onclick="openThread('${t.wa_id.replace(/\+/g,'%2B')}')">
+      <div class="name">${(t.name||t.wa_id).replace(/</g,'&lt;')}</div>
+      <div class="last">${t.last_dir==='out'?'Você: ':''}${(t.last_text||'').replace(/</g,'&lt;')}</div>
+    </div>
+  `).join('') || '<div class="empty">Sem conversas no período.</div>';
+}
+
+async function openThread(waEnc){
+  const wa = decodeURIComponent(waEnc);
+  currentWa = wa;
+  await loadThreads();
+  await loadMessages();
+}
+
+async function loadMessages(){
+  if(!currentWa) return;
+  const r = await fetch('/inbox/messages?wa=' + encodeURIComponent(currentWa));
+  const { rows, contact } = await r.json();
+  document.getElementById('title').textContent = (contact?.name || currentWa);
+  const chat = document.getElementById('chat');
+  chat.innerHTML = rows.map(m => {
+    const t  = (m.text||'').replace(/</g,'&lt;');
+    const ts = new Date(m.ts).toLocaleString();
+    const tick = (m.dir==='out') ? `<span class="st" style="color:${tickColor(m.status)}">${tickFor(m.status)}</span>` : '';
+    return `<div class="msg ${m.dir}">
+      <div>${t}</div>
+      <div class="ts">${ts}${tick}</div>
+    </div>`;
+  }).join('') || '<div class="empty">Sem mensagens ainda.</div>';
+  chat.scrollTop = chat.scrollHeight;
+  document.getElementById('text').focus();
+}
+
+async function sendNow(){
+  const t = document.getElementById('text').value.trim();
+  if(!currentWa || !t) return;
+  const r = await fetch('/inbox/send', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ wa: currentWa, text: t })
+  });
+  const j = await r.json();
+  if(!j.ok){ alert(j.error || 'Falha ao enviar'); return; }
+  document.getElementById('text').value='';
+  await loadMessages();
+  await loadThreads();
+}
+
+document.getElementById('send').onclick = sendNow;
+document.getElementById('q').oninput = () => loadThreads();
+
+// enter envia (Shift+Enter quebra linha)
+document.getElementById('text').addEventListener('keydown', e=>{
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendNow(); }
+});
+
+// polling leve
+setInterval(()=>{ loadThreads(); if(currentWa) loadMessages(); }, 8000);
+
+// boot
+loadThreads();
+</script>
+</body>
+</html>

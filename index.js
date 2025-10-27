@@ -122,14 +122,13 @@ app.post('/campaigns/run-now', async (req, res) => {
       .map(([num]) => num);
 
     // modo teste (envia só para um número específico)
-if (camp.test_to && String(camp.test_to).trim()) {
-  const to = normPhone(String(camp.test_to));         // normaliza para E.164 (+55…)
-  numbers = to ? [to].filter(n => !isOptedOut(n)) : []; // respeita opt-out no teste também
-}
+    if (camp.test_to && String(camp.test_to).trim()) {
+      const to = normPhone(String(camp.test_to));         // normaliza para E.164 (+55…)
+      numbers = to ? [to].filter(n => !isOptedOut(n)) : []; // respeita opt-out no teste também
+    }
 
-// conteúdo
-const text24 = (camp.content?.text_24h || '').trim(); // correto
-
+    // conteúdo
+    const text24 = (camp.content?.text_24h || '').trim(); // correto
 
     // dispara com intervalos aleatórios
     let delay = 0;
@@ -140,20 +139,14 @@ const text24 = (camp.content?.text_24h || '').trim(); // correto
       setTimeout(async () => {
         try {
           // ==== TEMPLATE (HSM) quando apropriado ====
-          // ==== TEMPLATE (HSM) quando apropriado ====
-const tplName  = (camp.content?.template_name || '').trim();
-const tplLang  = (camp.content?.template_lang || 'pt_BR').trim();
-
-// ▼▼▼ SUBSTITUA APENAS ESSA PARTE ▼▼▼
-const tplParamsBase = parseTplParams(camp.content?.template_params);
-const contactName   = (CONTACTS[to]?.name || '').trim();
-const tplParams     = (tplParamsBase.length ? tplParamsBase : [contactName || ''])
-  .map(v => v.replaceAll('{NAME}', contactName || ''));
-// ▲▲▲ FIM DA SUBSTITUIÇÃO ▲▲▲
-
-const tplMedia = absolutize((camp.content?.template_media_url || '').trim());
-const mode     = camp.policy?.mode || 'auto'; // auto | only24 | onlyTemplate
-
+          const tplName  = (camp.content?.template_name || '').trim();
+          const tplLang  = (camp.content?.template_lang || 'pt_BR').trim();
+          const tplParamsBase = parseTplParams(camp.content?.template_params);
+          const contactName   = (CONTACTS[to]?.name || '').trim();
+          const tplParams     = (tplParamsBase.length ? tplParamsBase : [contactName || ''])
+            .map(v => v.replaceAll('{NAME}', contactName || ''));
+          const tplMedia = absolutize((camp.content?.template_media_url || '').trim());
+          const mode     = camp.policy?.mode || 'auto'; // auto | only24 | onlyTemplate
 
           const lastSeen = CONTACTS[to]?.lastSeen || 0;
           const outside24h = (Date.now() - lastSeen) > (24*60*60*1000);
@@ -589,7 +582,6 @@ function appendWaParam(url, to){
     const base = (process.env.APP_BASE_URL || '').replace(/\/+$/,'') || 'http://localhost';
     const u = new URL(url, base);
     if(!u.searchParams.get('wa')) u.searchParams.set('wa', wa);
-    // mantém relativo se a url original era relativa
     if (!/^https?:\/\//i.test(url)) return u.pathname + (u.search || '') + (u.hash || '');
     return u.toString();
   }catch{ return url; }
@@ -618,9 +610,6 @@ function buildProductText(productKey, orderId) {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-function looksLikeImage(u) { return /\.(png|jpe?g|gif|webp)$/i.test(String(u||'')); }
-function looksLikeVideo(u) { return /\.(mp4|m4v|mov|webm)$/i.test(String(u||'')); }
-
 // Encurta o texto persuasivo para ficar leve (máx ~240 chars)
 function shortPersuasive(text, max = 240) {
   const t = String(text || '').replace(/\s+/g, ' ').trim();
@@ -633,12 +622,12 @@ function shortPersuasive(text, max = 240) {
 
 // Identifica/normaliza o método de pagamento vindo do MP
 function detectPaymentMethod(p) {
-  const mid = (p.payment_method_id || '').toLowerCase();   // ex: 'pix', 'bolbradesco', 'visa'
-  const typ = (p.payment_type_id   || '').toLowerCase();   // ex: 'bank_transfer', 'ticket', 'credit_card'
+  const mid = (p.payment_method_id || '').toLowerCase();
+  const typ = (p.payment_type_id   || '').toLowerCase();
 
   if (mid === 'pix' || typ === 'bank_transfer') return 'pix';
   if (typ === 'ticket') return 'boleto';
-  if (typ.includes('card')) return 'cartao';               // crédito/débito
+  if (typ.includes('card')) return 'cartao';
   return 'outro';
 }
 
@@ -670,15 +659,6 @@ function computeAmountBRL(productKey, flags = {}) {
   return Math.round((Number(total) || 0) * 100) / 100;
 }
 
-function absolutize(url) {
-  url = String(url || '').trim();
-  if (!url) return url;
-  if (/^https?:\/\//i.test(url)) return url;
-  const base = (process.env.APP_BASE_URL || '').replace(/\/+$/, '');
-  if (!base) return url;
-  return url.startsWith('/') ? base + url : `${base}/${url}`;
-}
-
 /** Soma produto + bumps selecionados (flags = {b1:true,...}) */
 function calcTotalAmount(productKey, flags = {}) {
   const prod = CONFIG[`produto${productKey}`] || {};
@@ -707,8 +687,7 @@ async function createMPPreferenceForProduct(productKey, orderId, wa /* <-- novo,
       pending: `${base}/checkout/pendente.html`,
     },
     auto_return: 'approved',
-    // 👇 AQUI: passamos o número do cliente para não depender de memória
-    metadata: { orderId, productKey, wa }, 
+    metadata: { orderId, productKey, wa },
     notification_url: `${base}/mp/webhook`
   };
 
@@ -825,7 +804,9 @@ app.post('/mp/process-payment', async (req, res) => {
 
         Object.keys(body).forEach(k => body[k] === undefined && delete body[k]);
         if (body.payer && body.payer.address) {
-          Object.keys(body.payer.address).forEach(k => body.payer.address[k] === undefined && delete body[payer.address][k]);
+          Object.keys(body.payer.address).forEach(k => {
+            if (body.payer.address[k] === undefined) delete body.payer.address[k];
+          });
         }
 
         try {
@@ -905,9 +886,8 @@ app.post('/mp/process-payment', async (req, res) => {
         if (!address.neighborhood)  missing.push('payer.address.neighborhood');
         if (!address.city)          missing.push('payer.address.city');
         if (!address.federal_unit || address.federal_unit.length !== 2) {
-  missing.push('payer.address.federal_unit (UF)');
-}
-
+          missing.push('payer.address.federal_unit (UF)');
+        }
 
         if (missing.length) {
           return res.status(400).json({ ok:false, error:'Endereço do pagador incompleto para boleto', required: missing, received: address });
@@ -1024,7 +1004,6 @@ async function sendDeliveryItem(to, titulo, entrega = {}, prefix = '') {
   };
   const tag = prefix ? `${prefix} ` : '';
 
-  // aviso/recibo
   await sendText({
     token: process.env.WHATSAPP_TOKEN,
     phoneNumberId: process.env.PHONE_NUMBER_ID,
@@ -1092,12 +1071,11 @@ function saveDelivered(){ fs.writeFileSync(DELIVERED_PATH, JSON.stringify(DELIVE
 // ============================================================================
 
 async function handleMpWebhook(req, res) {
-  if (req.method !== 'POST') return res.sendStatus(200); // ignora GET
+  if (req.method !== 'POST') return res.sendStatus(200);
   res.sendStatus(200);
   try {
     if (!process.env.MP_ACCESS_TOKEN || !mpClient) return;
 
-    // 1) Captura id do pagamento em TODOS os formatos possíveis
     const body = req.body || {};
     theQuery = req.query || {};
     const query = theQuery;
@@ -1120,7 +1098,6 @@ async function handleMpWebhook(req, res) {
       return;
     }
 
-    // 2) Carrega o pagamento
     const payment = new Payment(mpClient);
     const p = await payment.get({ id });
 
@@ -1131,15 +1108,12 @@ async function handleMpWebhook(req, res) {
       return;
     }
 
-    // ======= NOVO: trava anti-duplicado por paymentId =======================
     const paymentId = String(p.id || '').trim();
     if (DELIVERED[paymentId] === true) {
       console.log('[MP WEBHOOK] entrega já feita para', paymentId);
       return;
     }
-    // =======================================================================
 
-    // 3) Atualiza dashboard (sempre que aprovado)
     try {
       const orderId   = p.metadata?.orderId || null;
 
@@ -1149,10 +1123,8 @@ async function handleMpWebhook(req, res) {
         const productKeyMd = (p.metadata?.productKey || '').toUpperCase();
         const key = productKeyMd === 'B' ? 'B' : 'A';
 
-        // detecta método
         const method = detectPaymentMethod(p);
 
-        // valor da venda
         const amount =
           Number(p.transaction_amount) ||
           Number(p.amount) ||
@@ -1160,7 +1132,6 @@ async function handleMpWebhook(req, res) {
           parseFloat(String(CONFIG[`produto${key}`]?.preco || '0').replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',','.')) ||
           0;
 
-        // grava compra
         if (typeof logEventSafe === 'function') {
           logEventSafe({ type: 'purchase', payment_id: paymentId || null, orderId, productKey: key, method, amount });
         } else {
@@ -1171,20 +1142,16 @@ async function handleMpWebhook(req, res) {
       console.warn('[MP WEBHOOK] falhou ao registrar analytics:', e.message);
     }
 
-    // 4) Tenta entregar por WhatsApp (mais robusto)
     const orderId = p.metadata?.orderId;
     let cached  = orderId ? ORDERS.get(orderId) : null;
 
-    // tenta obter destino (to) por 4 fontes: cache, metadata.wa, payer.phone, fallback logs
     let to = cached?.to;
 
-    // (a) metadata.wa
     if (!to && p?.metadata?.wa) {
       const n = normPhone(p.metadata.wa);
       if (n) to = n;
     }
 
-    // (b) payer.phone {area_code, number}
     if (!to) {
       const ph = p?.payer?.phone || p?.additional_info?.payer?.phone || null;
       if (ph) {
@@ -1194,7 +1161,6 @@ async function handleMpWebhook(req, res) {
       }
     }
 
-    // (c) se ainda não há, registra aviso e encerra (venda já contabilizada)
     if (!to) {
       console.warn('[MP WEBHOOK] não achei o número do cliente (sem ORDERS, metadata.wa ou payer.phone). orderId=', orderId);
       return;
@@ -1202,7 +1168,6 @@ async function handleMpWebhook(req, res) {
 
     const key     = ((p.metadata?.productKey || cached?.productKey) === 'B') ? 'B' : 'A';
 
-    // marca contato como comprador
     try {
       if (!CONTACTS[to]) CONTACTS[to] = { name: '', lastSeen: 0, purchased: false };
       CONTACTS[to].lastSeen = Date.now();
@@ -1212,18 +1177,15 @@ async function handleMpWebhook(req, res) {
       console.warn('[MP WEBHOOK] falhou ao salvar contato (purchased=true):', e.message);
     }
 
-    // === entrega do produto principal + bumps comprados ===
     const prod   = CONFIG[`produto${key}`] || {};
     const titulo = prod.titulo || `Produto ${key}`;
 
-    // extrai bumps comprados do metadata
     const mdBumps = (p.metadata?.bumps && typeof p.metadata.bumps === 'object') ? p.metadata.bumps : {};
     const bumpsArr = Array.isArray(prod.bumps) ? prod.bumps : [];
     const boughtBumps = bumpsArr.filter(b =>
       b && (mdBumps[b.id] || mdBumps[String(b.id)] || mdBumps[b.titulo])
     );
 
-    // recibo geral
     await sendText({
       token: process.env.WHATSAPP_TOKEN,
       phoneNumberId: process.env.PHONE_NUMBER_ID,
@@ -1235,10 +1197,8 @@ async function handleMpWebhook(req, res) {
         `Enviarei abaixo seus acessos.`
     });
 
-    // produto principal
     await sendDeliveryItem(to, titulo, prod.entrega || {}, '');
 
-    // bumps (cada um com prefixo)
     for (let i = 0; i < boughtBumps.length; i++) {
       const b = boughtBumps[i];
       const prefix = `Bump #${i+1}`;
@@ -1254,10 +1214,8 @@ async function handleMpWebhook(req, res) {
       });
     }
 
-    // ======= NOVO: marca como entregue (idempotência) =======================
     DELIVERED[paymentId] = true;
     saveDelivered();
-    // =======================================================================
 
     if (orderId) ORDERS.delete(orderId);
   } catch (e) {
@@ -1276,7 +1234,6 @@ async function sendGreeting(to, name) {
       phoneNumberId: process.env.PHONE_NUMBER_ID,
       to,
       body,
-      // AJUSTE: saudação com MENU (sem UNSUB aqui)
       buttons: [
         { id: 'CHOOSE_A', title: CONFIG?.produtoA?.rotulo || 'Produto A' },
         { id: 'CHOOSE_B', title: CONFIG?.produtoB?.rotulo || 'Produto B' },
@@ -1327,7 +1284,6 @@ async function sendOffer(to, product, orderId) {
     try {
       const keyGuess = (product === CONFIG.produtoB) ? 'B' : 'A';
       const { init_point } = await createMPPreferenceForProduct(keyGuess, orderId, to);
-
       link = init_point;
     } catch (e) {
       console.error('[sendOffer] MP error:', e?.response?.data || e.message);
@@ -1337,7 +1293,6 @@ async function sendOffer(to, product, orderId) {
     link = buildCheckoutUrl(urlTpl, orderId);
   }
 
-  // >>> garante que o link tem ?wa=<numero>
   link = appendWaParam(link, to);
 
   const productKey = (product === CONFIG.produtoB) ? 'B' : 'A';
@@ -1397,7 +1352,6 @@ async function sendDefaultOneProduct(to) {
 // ---------- Rotas de painel/config ----------
 app.get('/config', (_req, res) => res.json(CONFIG));
 
-// helper para normalizar URLs de /uploads
 function toRelativeUploads(u) {
   let s = String(u || '').trim();
   if (!s) return s;
@@ -1533,6 +1487,71 @@ function logEventSafe(ev){
   logEvent(ev);
 }
 
+// === Inbox: storage de mensagens ============================================
+// Estrutura: [{ id, wa, dir: 'in'|'out', type: 'text'|'image'|'video'|'doc'|'template'|'buttons', text, media_url, status, ts, message_id? }]
+const MESSAGES_PATH = path.join(DATA_DIR, 'messages.json');
+function readJsonSafeInbox(p, fb){ try { return JSON.parse(fs.readFileSync(p,'utf8')); } catch { return fb; } }
+function writeJsonSafeInbox(p, v){ fs.writeFileSync(p, JSON.stringify(v, null, 2)); }
+
+let MESSAGES = readJsonSafeInbox(MESSAGES_PATH, []);
+function saveMessages(){ writeJsonSafeInbox(MESSAGES_PATH, MESSAGES); }
+
+// util: adiciona/atualiza status pelo message_id (WhatsApp)
+function upsertMessage(msg) {
+  if (msg.message_id) {
+    const i = MESSAGES.findIndex(m => m.message_id === msg.message_id);
+    if (i >= 0) {
+      MESSAGES[i] = { ...MESSAGES[i], ...msg };
+      saveMessages();
+      return MESSAGES[i];
+    }
+  }
+  const row = {
+    id: 'MSG-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,6),
+    status: 'received',
+    ...msg
+  };
+  MESSAGES.push(row);
+  saveMessages();
+  return row;
+}
+
+// lista de threads resumidas (última msg + último status por contato)
+function buildThreads(fromTs, toTs){
+  const map = new Map();
+  for (const m of MESSAGES) {
+    if (fromTs && m.ts < fromTs) continue;
+    if (toTs   && m.ts > toTs)   continue;
+
+    const wa = m.wa;
+    if (!map.has(wa)) {
+      map.set(wa, { wa, last_ts: 0, last_text: '', last_dir: '', last_status: '', name: (CONTACTS[wa]?.name || '') });
+    }
+    const row = map.get(wa);
+    if (m.ts >= row.last_ts) {
+      row.last_ts = m.ts;
+      row.last_text = m.text || (m.media_url ? `[${m.type}]` : '');
+      row.last_dir = m.dir;
+      row.last_status = m.status || row.last_status;
+    }
+    if (m.dir === 'out' && m.status) row.last_status = m.status;
+  }
+  ANALYTICS.filter(e => e.type === 'wa_status').forEach(e => {
+    if (fromTs && e.ts < fromTs) return;
+    if (toTs   && e.ts > toTs)   return;
+    const wa = e.wa_id;
+    if (!wa) return;
+    if (!map.has(wa)) map.set(wa, { wa, last_ts: 0, last_text: '', last_dir: '', last_status: '', name: (CONTACTS[wa]?.name || '') });
+    const row = map.get(wa);
+    if (e.ts >= row.last_ts) row.last_ts = e.ts;
+    row.last_status = e.status || row.last_status;
+  });
+
+  return Array.from(map.values())
+    .sort((a,b)=> b.last_ts - a.last_ts);
+}
+// ============================================================================
+
 // ---------- Webhook: eventos (POST) ----------
 app.post('/webhook', (req, res) => {
   res.sendStatus(200);
@@ -1555,9 +1574,14 @@ app.post('/webhook', (req, res) => {
 
           try {
             logEvent({ ts, type: 'wa_status', message_id: msgId, status, wa_id: waTo, conversation_id: convId, origin });
+            if (typeof upsertMessage === 'function') {
+              const newStatus = String(status || '').toLowerCase();
+              if (msgId && newStatus) {
+                upsertMessage({ message_id: msgId, status: newStatus });
+              }
+            }
           } catch {}
         }
-        // não retorna aqui; deixa continuar para tratar possível mensagem entrante
       }
 
       // 1) Mensagem ENTRANTE do usuário
@@ -1571,7 +1595,32 @@ app.post('/webhook', (req, res) => {
       const name = value?.contacts?.[0]?.profile?.name || '';
       const s    = touchSession(msg.from);
 
-      // ======== ATUALIZA CONTATO (lastSeen e nome) ========
+      // === INBOX: registra entrante ===
+      try {
+        if (typeof upsertMessage === 'function') {
+          const base = { wa: to, dir: 'in', ts: Date.now() };
+          if (msg.type === 'text') {
+            upsertMessage({ ...base, type: 'text', text: String(msg.text?.body || '') });
+          } else if (msg.type === 'image') {
+            upsertMessage({ ...base, type: 'image', media_url: msg.image?.id || '', text: msg.image?.caption || '' });
+          } else if (msg.type === 'video') {
+            upsertMessage({ ...base, type: 'video', media_url: msg.video?.id || '', text: msg.video?.caption || '' });
+          } else if (msg.type === 'audio') {
+            upsertMessage({ ...base, type: 'audio', media_url: msg.audio?.id || '' });
+          } else if (msg.type === 'document') {
+            upsertMessage({ ...base, type: 'doc', media_url: msg.document?.id || '', text: msg.document?.filename || '' });
+          } else if (msg.type === 'interactive') {
+            const payload = msg.interactive?.type === 'button_reply'
+              ? (msg.interactive?.button_reply?.title || msg.interactive?.button_reply?.id)
+              : (msg.interactive?.list_reply?.title || msg.interactive?.list_reply?.id);
+            upsertMessage({ ...base, type: 'buttons', text: `[botão] ${payload || ''}` });
+          } else {
+            upsertMessage({ ...base, type: msg.type || 'unknown', text: '' });
+          }
+        }
+      } catch (e) { console.warn('[INBOX] falha ao registrar entrante:', e.message); }
+
+      // ======== ATUALIZA CONTATO ========
       try {
         if (!CONTACTS[to]) CONTACTS[to] = { name:'', lastSeen:0, purchased:false };
         CONTACTS[to].name = name || CONTACTS[to].name || '';
@@ -1579,7 +1628,7 @@ app.post('/webhook', (req, res) => {
         saveContacts();
       } catch(e) { console.error('[CONTACTS upsert]', e.message); }
 
-      // ======== CAMPANHAS: upsert lead a cada mensagem recebida ========
+      // ======== CAMPANHAS: upsert lead ========
       try {
         const wa_id = normPhone(msg.from);
         if (wa_id) {
@@ -1596,7 +1645,6 @@ app.post('/webhook', (req, res) => {
         }
       } catch(e) { console.error('[LEADS upsert]', e.message); }
 
-      // --- analytics: marca uma mensagem recebida desse contato
       try {
         const wa_id_norm = normPhone(msg.from);
         if (wa_id_norm) logEvent({ type: 'message_in', wa_id: wa_id_norm });
@@ -1622,7 +1670,7 @@ app.post('/webhook', (req, res) => {
         if (payload === 'MENU')     { s.stage = 'waiting_choice'; await sendGreeting(to, name); return; }
       }
 
-      // ====== BOTÕES (fallback de plataforma) ======
+      // ====== BOTÕES (fallback) ======
       if (msg.type === 'button' && msg?.button?.payload) {
         const payload = String(msg.button.payload || '').toUpperCase();
 
@@ -1646,7 +1694,6 @@ app.post('/webhook', (req, res) => {
       if (msg.type === 'text') {
         const textIn = human(msg.text?.body).toLowerCase();
 
-        // 🔕 DESCADASTRO por texto
         if ([
           'parar','sair','cancelar','stop','unsubscribe',
           'não quero receber','nao quero receber','não receber','nao receber',
@@ -1662,10 +1709,9 @@ app.post('/webhook', (req, res) => {
           return;
         }
 
-        // 🔔 REATIVAÇÃO por texto (opcional)
         if (['quero receber','voltar a receber','assinar','reativar'].some(k => textIn.includes(k))) {
           if (!CONTACTS[to]) CONTACTS[to] = { name:'', lastSeen: Date.now(), purchased: false };
-          CONTACTS[to].opt_out = false; 
+          CONTACTS[to].opt_out = false;
           saveContacts();
           try {
             const wa = normPhone(msg.from);
@@ -1688,28 +1734,17 @@ app.post('/webhook', (req, res) => {
           return;
         }
 
-       if ([
-  // originais
-  'menu','oi','olá','ola','iniciar','começar','comecar','inicio','início',
-
-  // novas saudações
-  'bom dia','bom dia!','bom dia.',
-  'boa tarde','boa tarde!','boa tarde.',
-  'boa noite','boa noite!','boa noite.',
-  'boa madrugada','boa madrugada!','boa madrugada.',
-  'opa','opa!','salve','salve!','hey','hello','hi',
-
-  // frases pedidas (com e sem acento/pontuação)
-  'gostaria de mais informações','gostaria de mais informacoes','gostaria de mais informações!','gostaria de mais informacoes!',
-  'gostaria da receita','gostaria da receita!','gostaria da receita?',
-  'eu quero a receita','eu quero a receita!','eu quero a receita?',
-  'eu quero','eu quero!','eu quero?',
-  'como eu consigo a receita','como eu consigo a receita?','como eu consigo a receita!'
-].includes(textIn)) {
-  s.stage = 'waiting_choice';
-  await sendGreeting(to, name);
-  return;
-}
+        if ([
+          'menu','oi','olá','ola','iniciar','começar','comecar','inicio','início',
+          'bom dia','bom dia!','bom dia.','boa tarde','boa tarde!','boa tarde.','boa noite','boa noite!','boa noite.','boa madrugada','boa madrugada!','boa madrugada.',
+          'opa','opa!','salve','salve!','hey','hello','hi',
+          'gostaria de mais informações','gostaria de mais informacoes','gostaria de mais informações!','gostaria de mais informacoes!',
+          'gostaria da receita','gostaria da receita!','gostaria da receita?','eu quero a receita','eu quero a receita!','eu quero a receita?','eu quero','eu quero!','eu quero?','como eu consigo a receita','como eu consigo a receita?','como eu consigo a receita!'
+        ].includes(textIn)) {
+          s.stage = 'waiting_choice';
+          await sendGreeting(to, name);
+          return;
+        }
 
         if (['a','1','produto a','oferta a'].includes(textIn)) {
           const orderId = makeOrderId(); await sendOffer(to, CONFIG.produtoA, orderId); return;
@@ -1740,30 +1775,6 @@ app.post('/webhook', (req, res) => {
   })();
 });
 
-
-// ======= ROTAS DE ANALYTICS ================================================
-app.post('/analytics/checkout-click', (req, res) => {
-  try {
-    const orderId = (req.body?.orderId || '').toString().slice(0,64);
-    const productKey = (req.body?.productKey === 'B' ? 'B' : 'A');
-
-    // NOVO: se vier wa, já associa ao pedido
-    const rawWa = (req.body?.wa || '').toString().trim();
-    if (rawWa) {
-      const norm = normPhone(rawWa);
-      if (norm) {
-        ORDERS.set(orderId, { to: norm, productKey, createdAt: Date.now() });
-      }
-    }
-
-    logEvent({ type: 'checkout_click', orderId, productKey });
-    return res.json({ ok: true });
-  } catch (e) {
-    console.error('[analytics click]', e.message);
-    return res.status(500).json({ ok:false });
-  }
-});
-
 function _ymd(ts){ return new Date(ts).toISOString().slice(0,10); }
 
 app.get('/analytics/stats', (req, res) => {
@@ -1778,7 +1789,6 @@ app.get('/analytics/stats', (req, res) => {
 
     const evs = ANALYTICS.filter(inRange);
 
-    // --- dedupe de purchases por payment_id (fallback: orderId)
     const uniqKey = e => e.payment_id || (`ORD:${e.orderId||''}`);
     const seen = new Set();
     theQuery = null;
@@ -1789,8 +1799,7 @@ app.get('/analytics/stats', (req, res) => {
       if (!seen.has(k)) { seen.add(k); uniquePurchases.push(e); }
     });
 
-    // --- agregação por método (com base nas compras únicas)
-    const payMap = new Map(); // method -> { method, count, amount }
+    const payMap = new Map();
     for (const e of uniquePurchases) {
       const m = (e.method || 'outro').toLowerCase();
       if (!payMap.has(m)) payMap.set(m, { method: m, count: 0, amount: 0 });
@@ -1800,7 +1809,6 @@ app.get('/analytics/stats', (req, res) => {
     }
     const paysArr = Array.from(payMap.values()).sort((a,b)=> b.amount - a.amount);
 
-    // --- totais gerais
     const totalClicks = evs.filter(e => e.type === 'checkout_click').length;
     const totalSales  = uniquePurchases.length;
     const revenue     = uniquePurchases.reduce((s,e)=> s + (Number(e.amount)||0), 0);
@@ -1814,13 +1822,9 @@ app.get('/analytics/stats', (req, res) => {
       dailyMap.get(d)[k] += v;
     };
 
-    // clicks por dia
     evs.forEach(e => { if (e.type === 'checkout_click') bump(_ymd(e.ts), 'checkout_clicks'); });
-
-    // vendas por dia (únicas)
     uniquePurchases.forEach(e => { bump(_ymd(e.ts), 'sales_count'); });
 
-    // mensagens únicas por dia
     const seenDayWa = new Set();
     evs.forEach(e => {
       if (e.type==='message_in' && e.wa_id){
@@ -1831,10 +1835,9 @@ app.get('/analytics/stats', (req, res) => {
 
     const daily = Array.from(dailyMap.values()).sort((a,b)=> a.date.localeCompare(b.date));
 
-    // ---- resumo por método para o dashboard ----
     const payments = {
-      by_method: paysArr,                               // [{ method, count, amount }]
-      totals: { count: totalSales, amount: revenue }    // opcional
+      by_method: paysArr,
+      totals: { count: totalSales, amount: revenue }
     };
 
     res.json({
@@ -1846,14 +1849,13 @@ app.get('/analytics/stats', (req, res) => {
         revenue
       },
       daily,
-      payments // usado pelo front
+      payments
     });
   } catch (e) {
     console.error('[analytics/stats]', e.message);
     res.status(500).json({ ok:false });
   }
 });
-
 
 // === Status de pagamento por orderId/payment_id (para o checkout "escutar")
 app.get('/analytics/pay-status', (req, res) => {
@@ -1875,6 +1877,71 @@ app.get('/analytics/pay-status', (req, res) => {
     return res.status(500).json({ ok:false });
   }
 });
+
+// ===================== ROTAS DO INBOX (NOVAS) ================================
+// Lista de contatos (threads)
+app.get('/inbox/threads', (req, res) => {
+  try {
+    const from = req.query.from ? new Date(req.query.from + 'T00:00:00').getTime() : null;
+    const to   = req.query.to   ? new Date(req.query.to   + 'T23:59:59').getTime() : null;
+    const threads = buildThreads(from, to);
+    res.json({ ok: true, threads });
+  } catch (e) {
+    console.error('[inbox/threads]', e.message);
+    res.status(500).json({ ok:false, error:'Falha ao listar threads' });
+  }
+});
+
+// Histórico de mensagens por contato
+app.get('/inbox/messages', (req, res) => {
+  try {
+    const wa = normPhone(req.query.wa || '');
+    if (!wa) return res.status(400).json({ ok:false, error:'Informe ?wa=+55...' });
+    const limit = Math.max(1, Math.min(500, Number(req.query.limit || 200)));
+    const rows = MESSAGES.filter(m => m.wa === wa).sort((a,b)=> a.ts - b.ts).slice(-limit);
+    res.json({ ok:true, wa, name: (CONTACTS[wa]?.name || ''), messages: rows });
+  } catch (e) {
+    console.error('[inbox/messages]', e.message);
+    res.status(500).json({ ok:false, error:'Falha ao listar mensagens' });
+  }
+});
+
+// Enviar resposta manual e registrar saída
+app.post('/inbox/send', async (req, res) => {
+  try {
+    const wa = normPhone(req.body.wa || '');
+    const text = (req.body.text || '').toString();
+    if (!wa || !text) return res.status(400).json({ ok:false, error:'Campos obrigatórios: wa, text' });
+
+    const resp = await sendText({
+      token: process.env.WHATSAPP_TOKEN,
+      phoneNumberId: process.env.PHONE_NUMBER_ID,
+      to: wa,
+      body: text
+    });
+
+    const message_id =
+      resp?.messages?.[0]?.id ||
+      resp?.data?.messages?.[0]?.id ||
+      resp?.id || null;
+
+    const saved = upsertMessage({
+      wa,
+      dir: 'out',
+      type: 'text',
+      text,
+      status: 'sent',
+      ts: Date.now(),
+      message_id
+    });
+
+    return res.json({ ok:true, message: saved });
+  } catch (e) {
+    console.error('[inbox/send]', e.response?.data || e.message);
+    return res.status(500).json({ ok:false, error:'Falha ao enviar' });
+  }
+});
+// ============================================================================
 
 // ---------- Start ----------
 const PORT = Number(process.env.PORT || 3000);

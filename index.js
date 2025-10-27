@@ -1539,10 +1539,30 @@ app.post('/webhook', (req, res) => {
 
   (async () => {
     try {
-      const body = req.body;
+      const body  = req.body;
       const value = body?.entry?.[0]?.changes?.[0]?.value;
-      const msg   = value?.messages?.[0];
-      if (!value || !msg) return;
+      if (!value) return;
+
+      // 0) STATUS das suas mensagens (sent/delivered/read/failed)
+      if (value?.statuses?.length) {
+        for (const st of value.statuses) {
+          const msgId  = st.id;
+          const status = st.status; // sent | delivered | read | failed
+          const waTo   = normPhone(st.recipient_id || '');
+          const convId = st.conversation?.id || null;
+          const origin = st.conversation?.origin?.type || null;
+          const ts     = Number(st.timestamp) ? Number(st.timestamp) * 1000 : Date.now();
+
+          try {
+            logEvent({ ts, type: 'wa_status', message_id: msgId, status, wa_id: waTo, conversation_id: convId, origin });
+          } catch {}
+        }
+        // não retorna aqui; deixa continuar para tratar possível mensagem entrante
+      }
+
+      // 1) Mensagem ENTRANTE do usuário
+      const msg = value?.messages?.[0];
+      if (!msg) return;
 
       const myWaba = value?.metadata?.phone_number_id;
       if (String(msg.from) === String(myWaba)) return;
@@ -1691,7 +1711,6 @@ app.post('/webhook', (req, res) => {
   return;
 }
 
-
         if (['a','1','produto a','oferta a'].includes(textIn)) {
           const orderId = makeOrderId(); await sendOffer(to, CONFIG.produtoA, orderId); return;
         }
@@ -1720,6 +1739,7 @@ app.post('/webhook', (req, res) => {
     }
   })();
 });
+
 
 // ======= ROTAS DE ANALYTICS ================================================
 app.post('/analytics/checkout-click', (req, res) => {

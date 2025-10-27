@@ -56,7 +56,6 @@
 let currentWa = null;
 
 function tickFor(status){
-  // sent ✓   delivered ✓✓   read ✓✓ (azul)   failed !
   if (status === 'read')      return '✓✓';
   if (status === 'delivered') return '✓✓';
   if (status === 'sent')      return '✓';
@@ -64,20 +63,20 @@ function tickFor(status){
   return '';
 }
 function tickColor(status){
-  if (status === 'read')      return '#1DA1F2'; // azul
-  if (status === 'failed')    return '#D93025'; // vermelho
-  return '#6B7280'; // cinza
+  if (status === 'read')      return '#1DA1F2';
+  if (status === 'failed')    return '#D93025';
+  return '#6B7280';
 }
 
 async function loadThreads(){
   const q = document.getElementById('q').value.trim();
   const r = await fetch('/inbox/threads?limit=200&q=' + encodeURIComponent(q));
   const j = await r.json();
-  const rows = j.rows || [];
+  const rows = j.threads || j.rows || [];
   const el = document.getElementById('threads');
   el.innerHTML = rows.map(t => `
-    <div class="thread ${t.wa_id===currentWa?'active':''}" onclick="openThread('${t.wa_id.replace(/\+/g,'%2B')}')">
-      <div class="name">${(t.name||t.wa_id).replace(/</g,'&lt;')}</div>
+    <div class="thread ${t.wa===currentWa?'active':''}" onclick="openThread('${(t.wa||'').replace(/\+/g,'%2B')}')">
+      <div class="name">${(t.name||t.wa||'').replace(/</g,'&lt;')}</div>
       <div class="last">${t.last_dir==='out'?'Você: ':''}${(t.last_text||'').replace(/</g,'&lt;')}</div>
     </div>
   `).join('') || '<div class="empty">Sem conversas no período.</div>';
@@ -93,8 +92,9 @@ async function openThread(waEnc){
 async function loadMessages(){
   if(!currentWa) return;
   const r = await fetch('/inbox/messages?wa=' + encodeURIComponent(currentWa));
-  const { rows, contact } = await r.json();
-  document.getElementById('title').textContent = (contact?.name || currentWa);
+  const j = await r.json();
+  const rows = j.messages || j.rows || [];
+  document.getElementById('title').textContent = (j.name || j.contact?.name || currentWa);
   const chat = document.getElementById('chat');
   chat.innerHTML = rows.map(m => {
     const t  = (m.text||'').replace(/</g,'&lt;');
@@ -126,15 +126,12 @@ async function sendNow(){
 document.getElementById('send').onclick = sendNow;
 document.getElementById('q').oninput = () => loadThreads();
 
-// enter envia (Shift+Enter quebra linha)
 document.getElementById('text').addEventListener('keydown', e=>{
   if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendNow(); }
 });
 
-// polling leve
 setInterval(()=>{ loadThreads(); if(currentWa) loadMessages(); }, 8000);
 
-// boot
 loadThreads();
 </script>
 </body>
